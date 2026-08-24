@@ -1,0 +1,147 @@
+<div class="app-container">
+  <!-- Header -->
+  <header class="app-header">
+    <div class="brand">
+      <div class="logo-icon">🏠</div>
+      <div>
+        <h1>RentEasy</h1>
+        <p class="subtitle">Angular Frontend + Express & MongoDB Backend</p>
+      </div>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-outline" (click)="refreshAll()" title="Refresh connection & items">
+        🔄 Refresh
+      </button>
+    </div>
+  </header>
+
+  <!-- Status Bar -->
+  <section class="status-section">
+    <div class="status-card" [class.connected]="isConnected()" [class.error]="!isConnected()">
+      <div class="status-indicator">
+        <span class="dot" [class.dot-green]="isConnected()" [class.dot-red]="!isConnected()"></span>
+        <span class="status-label">Express Backend:</span>
+        <strong class="status-value">{{ isConnected() ? 'Online (Port 5000)' : 'Offline / Connecting' }}</strong>
+      </div>
+      <div class="status-indicator">
+        <span class="dot" [class.dot-green]="isDbConnected()" [class.dot-yellow]="isConnected() && !isDbConnected()" [class.dot-red]="!isConnected()"></span>
+        <span class="status-label">MongoDB:</span>
+        <strong class="status-value">{{ isDbConnected() ? 'Connected' : (isConnected() ? 'Disconnected (Check Mongo URI)' : 'Waiting...') }}</strong>
+      </div>
+    </div>
+
+    <!-- Error Banner -->
+    <div *ngIf="connectionError()" class="alert-banner">
+      ⚠️ <span>{{ connectionError() }}</span>
+    </div>
+  </section>
+
+  <!-- Main Content Grid -->
+  <main class="main-grid">
+    <!-- Form Card -->
+    <section class="card form-card">
+      <div class="card-header">
+        <h2>➕ Add New Rental Item</h2>
+        <p>Test POST request from Angular to Express & MongoDB</p>
+      </div>
+
+      <form (ngSubmit)="onAddItem()" class="item-form">
+        <div class="form-group">
+          <label for="title">Item Title *</label>
+          <input
+            id="title"
+            type="text"
+            [(ngModel)]="newItem.title"
+            name="title"
+            placeholder="e.g., 2-Bedroom Luxury Condo"
+            required
+          />
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="category">Category</label>
+            <select id="category" [(ngModel)]="newItem.category" name="category">
+              <option *ngFor="let cat of categories" [value]="cat">{{ cat }}</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="price">Price ($/mo) *</label>
+            <input
+              id="price"
+              type="number"
+              [(ngModel)]="newItem.price"
+              name="price"
+              placeholder="e.g., 1200"
+              min="0"
+              required
+            />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="description">Description</label>
+          <textarea
+            id="description"
+            rows="3"
+            [(ngModel)]="newItem.description"
+            name="description"
+            placeholder="Enter details, amenities, or features..."
+          ></textarea>
+        </div>
+
+        <button type="submit" class="btn btn-primary" [disabled]="isSubmitting() || !isConnected()">
+          {{ isSubmitting() ? 'Saving to Database...' : 'Add Rental Item' }}
+        </button>
+      </form>
+    </section>
+
+    <!-- Items List Card -->
+    <section class="card list-card">
+      <div class="card-header list-header">
+        <div>
+          <h2>📦 Rental Items (from MongoDB)</h2>
+          <p>Total items: <strong>{{ items().length }}</strong></p>
+        </div>
+      </div>
+
+      <!-- Loading State -->
+      <div *ngIf="isLoading()" class="state-container">
+        <div class="spinner"></div>
+        <p>Loading items from backend...</p>
+      </div>
+
+      <!-- Empty State -->
+      <div *ngIf="!isLoading() && items().length === 0" class="state-container empty-state">
+        <div class="empty-icon">📂</div>
+        <h3>No Rental Items Found</h3>
+        <p *ngIf="isConnected()">Use the form on the left to add your first item to MongoDB!</p>
+        <p *ngIf="!isConnected()">Start your backend server (`npm run dev` in backend folder) to load data.</p>
+      </div>
+
+      <!-- Items Grid / List -->
+      <div *ngIf="!isLoading() && items().length > 0" class="items-list">
+        <div *ngFor="let item of items()" class="item-card">
+          <div class="item-main">
+            <div class="item-top">
+              <span class="category-badge">{{ item.category }}</span>
+              <span class="price-tag">\${{ item.price | number:'1.0-2' }}/mo</span>
+            </div>
+            <h3 class="item-title">{{ item.title }}</h3>
+            <p *ngIf="item.description" class="item-desc">{{ item.description }}</p>
+            <div class="item-meta">
+              <span *ngIf="item.createdAt">Added {{ item.createdAt | date:'mediumDate' }}</span>
+              <span *ngIf="item._id" class="id-tag">ID: {{ item._id.substring(0, 8) }}...</span>
+            </div>
+          </div>
+          <div class="item-actions">
+            <button class="btn-delete" (click)="onDeleteItem(item._id)" title="Delete from MongoDB">
+              🗑️
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
