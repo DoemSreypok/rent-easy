@@ -55,7 +55,7 @@ export class App implements OnInit {
         this.isDbConnected.set(false);
         this.connectionError.set(
           err.status === 0
-            ? 'Cannot connect to backend server. Make sure it is running on http://localhost:5000'
+            ? 'Cannot connect to backend server. Make sure it is running on http://localhost:5001'
             : err.message || 'Error connecting to backend'
         );
       }

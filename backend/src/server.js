@@ -8,7 +8,7 @@ import apiRoutes from './routes/api.routes.js';
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5001;
 
 // Initialize Database Connection
 connectDB();

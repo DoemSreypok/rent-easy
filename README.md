@@ -12,8 +12,8 @@ cd backend
 npm install
 npm run dev
 ```
-- Backend runs on: **`http://localhost:5000`**
-- API health check: **`http://localhost:5000/api/health`**
+- Backend runs on: **`http://localhost:5001`**
+- API health check: **`http://localhost:5001/api/health`**
 - Configured in: [backend/.env](file:///Users/fedora/Desktop/Pok/rent-easy/backend/.env)
 
 ### 2. Start the Frontend Application (Angular)

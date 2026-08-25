@@ -21,7 +21,7 @@
       <div class="status-indicator">
         <span class="dot" [class.dot-green]="isConnected()" [class.dot-red]="!isConnected()"></span>
         <span class="status-label">Express Backend:</span>
-        <strong class="status-value">{{ isConnected() ? 'Online (Port 5000)' : 'Offline / Connecting' }}</strong>
+        <strong class="status-value">{{ isConnected() ? 'Online (Port 5001)' : 'Offline / Connecting' }}</strong>
       </div>
       <div class="status-indicator">
         <span class="dot" [class.dot-green]="isDbConnected()" [class.dot-yellow]="isConnected() && !isDbConnected()" [class.dot-red]="!isConnected()"></span>
