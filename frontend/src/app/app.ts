@@ -21,7 +21,7 @@ import { PropertyListing } from './models/flowchart.model';
     AuthModalComponent
   ],
   templateUrl: './app.html',
-  styleUrls: ['./app.css']
+  styleUrls: ['./app.scss']
 })
 export class App implements OnInit {
   private apiService = inject(ApiService);

@@ -11,7 +11,7 @@ import { PropertyListing, ViewingBooking } from '../../models/flowchart.model';
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './homepage-preview.component.html',
-  styleUrls: ['./homepage-preview.component.css']
+  styleUrls: ['./homepage-preview.component.scss']
 })
 export class HomepagePreviewComponent implements OnInit {
   private apiService = inject(ApiService);

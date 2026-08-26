@@ -17,7 +17,7 @@ import {
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './journey-simulator.component.html',
-  styleUrls: ['./journey-simulator.component.css']
+  styleUrls: ['./journey-simulator.component.scss']
 })
 export class JourneySimulatorComponent implements OnInit {
   private apiService = inject(ApiService);
