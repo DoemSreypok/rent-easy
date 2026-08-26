@@ -14,26 +14,26 @@ const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/rent_e
 
 export const SEED_USERS = [
   {
-    name: 'Sophie Taylor',
-    email: 'sophie@renteasy.com',
+    name: 'Pinky',
+    email: 'pinky@renteasy.com',
     password: 'password123',
     role: 'tenant',
     phone: '+1 (555) 382-9912',
     employment: 'Senior Software Engineer @ Stripe',
     annualIncome: '$195,000 / yr',
     creditScore: 785,
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Sophie'
+    avatar: 'https://png.pngtree.com/png-vector/20220529/ourmid/pngtree-blue-user-icon-profile-and-account-vector-design-vector-sign-vector-png-image_46129432.jpg://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTWP35Vw8ERECqWKmW1mv0XieGVyaYbmyvjiMA3cZVbIA&s=10'
   },
   {
-    name: 'Alexander Sterling',
-    email: 'alexander@renteasy.com',
+    name: ' Den Lii',
+    email: 'lyden@renteasy.com',
     password: 'password123',
     role: 'owner',
     phone: '+1 (555) 901-4433',
     employment: 'Managing Director @ Sterling Estates LLC',
     annualIncome: '$450,000 / yr',
     creditScore: 810,
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Alexander'
+    avatar: 'https://png.pngtree.com/png-vector/20220529/ourmid/pngtree-blue-user-icon-profile-and-account-vector-design-vector-sign-vector-png-image_46129432.jpg://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTWP35Vw8ERECqWKmW1mv0XieGVyaYbmyvjiMA3cZVbIA&s=10'
   }
 ];
 
@@ -206,7 +206,7 @@ export const SEED_APPLICATIONS = [
     propertyId: 'prop-1',
     propertyTitle: 'The Peak Luxury Riverview Penthouse',
     tenantName: 'Sophie Taylor',
-    email: 'sophie@renteasy.com',
+    email: 'pinky@renteasy.com',
     phone: '+855 12 345 678',
     employment: 'Regional Director @ Grab Southeast Asia',
     annualIncome: '$120,000 / yr',

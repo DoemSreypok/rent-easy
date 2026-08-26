@@ -85,7 +85,7 @@ export class AuthService {
   }
 
   quickLoginAs(role: 'tenant' | 'owner'): Observable<AuthResponse> {
-    const email = role === 'tenant' ? 'sophie@renteasy.com' : 'alexander@renteasy.com';
+    const email = role === 'tenant' ? 'pinky@renteasy.com' : 'lyden@renteasy.com';
     const password = 'password123';
     return this.login(email, password);
   }
