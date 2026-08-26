@@ -1,0 +1,134 @@
+<div class="portal-container">
+  
+  <!-- Gate A: Not Logged In (Guest) -->
+  <div *ngIf="!authService.isLoggedIn()" class="access-restricted-card glass-card">
+    <div class="lock-icon-box">🔒</div>
+    <h2>Tenant Sign In Required</h2>
+    <p class="lock-desc">
+      You must be signed in to view your Active Tenancy Contract, Digital Lease, and Rent Payment Ledger.
+    </p>
+    <div class="lock-actions">
+      <button class="btn btn-teal-solid" (click)="openLoginModal('tenant')">
+        Sign In as Tenant →
+      </button>
+    </div>
+  </div>
+
+  <!-- Gate B: Authorized Active Tenancy View -->
+  <div *ngIf="authService.isLoggedIn()" class="authorized-portal-view">
+    
+    <!-- Header -->
+    <div class="portal-header glass-card">
+      <div class="portal-title-row">
+        <div>
+          <span class="portal-badge badge-tenant">🏠 ACTIVE RESIDENTIAL TENANCY</span>
+          <h2>{{ activeRentalProperty()?.title || 'Skyline Riverview Penthouse' }}</h2>
+          <p class="subtitle">
+            📍 {{ activeRentalProperty()?.location || 'BKK1, Phnom Penh, Cambodia' }} • Managed by {{ activeRentalProperty()?.owner?.name || 'Alexander Sterling' }}
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Success Payment Alert Banner -->
+    <div *ngIf="paymentSuccess()" class="payment-success-banner alert-success">
+      <div class="alert-icon-circle">🎉</div>
+      <div class="alert-text-body">
+        <strong>Rent Payment Processed Successfully!</strong>
+        <p>Your payment of ${{ activeRentalProperty()?.price || 1500 }}.00 has been received into verified escrow.</p>
+      </div>
+      <button type="button" class="alert-close-btn" (click)="paymentSuccess.set(false)">✕</button>
+    </div>
+
+    <div class="rental-hub-grid">
+      
+      <!-- 1. Active Lease Card -->
+      <div class="lease-active-card glass-card">
+        <div class="card-header-status">
+          <span class="status-pill green">✓ Active 12-Month Tenancy</span>
+          <span class="term-badge">Sept 2026 - Aug 2027</span>
+        </div>
+        
+        <h3>Digital Lease Contract</h3>
+        <p class="loc">📍 {{ activeRentalProperty()?.location }}</p>
+
+        <div class="lease-meta-row">
+          <div><span>Monthly Rent:</span> <strong>${{ activeRentalProperty()?.price }} / month</strong></div>
+          <div><span>Security Deposit:</span> <strong>${{ activeRentalProperty()?.deposit }} (Held in Escrow)</strong></div>
+          <div><span>Landlord Contact:</span> <strong>{{ activeRentalProperty()?.owner?.name }}</strong></div>
+          <div><span>Status:</span> <strong class="text-teal">Fully Executed & Legally Binding</strong></div>
+        </div>
+
+        <div class="lease-digital-sign">
+          <span>🔒 Cryptographically Signed Contract</span>
+          <button class="btn btn-sm btn-outline">📄 Download Lease PDF</button>
+        </div>
+      </div>
+
+      <!-- 2. Rent Payment & Escrow Card -->
+      <div class="rent-payment-card glass-card">
+        <h4>💰 Digital Rent Payment & Escrow</h4>
+        <p class="sub">Next Rent Payment Due: <strong>September 1, 2026</strong></p>
+
+        <div class="payment-ledger">
+          <div class="ledger-item">
+            <span>Security Deposit (Protected):</span>
+            <span class="status-pill green">✓ In Escrow (${{ activeRentalProperty()?.deposit || 1500 }})</span>
+          </div>
+          <div class="ledger-item">
+            <span>Current Month Status:</span>
+            <span class="status-pill green">✓ Paid in Full (${{ activeRentalProperty()?.price || 1500 }})</span>
+          </div>
+          <div class="ledger-item">
+            <span>Payment Method:</span>
+            <strong>🏦 ABA Pay KHQR / Visa ending in 4821</strong>
+          </div>
+        </div>
+
+        <button 
+          class="btn btn-teal-solid full-width btn-pay-now" 
+          (click)="payRent()"
+          [disabled]="isProcessingPayment()"
+        >
+          {{ isProcessingPayment() ? 'Processing Digital Payment...' : '💳 Pay Rent Now / Manage Auto-Pay →' }}
+        </button>
+      </div>
+
+      <!-- 3. Maintenance & Repair Requests -->
+      <div class="maintenance-box glass-card full-span">
+        <h4>🛠️ Maintenance & Repair Request Desk</h4>
+        <p class="sub">Submit repair requests directly to your property landlord and track dispatched certified technicians.</p>
+
+        <div class="report-form-row">
+          <input 
+            type="text" 
+            placeholder="Describe the issue (e.g. AC filter maintenance, bathroom leak, electrical socket)..." 
+            [ngModel]="newMaintIssue()" 
+            (ngModelChange)="newMaintIssue.set($event)"
+          />
+          <select [ngModel]="newMaintUrgency()" (ngModelChange)="newMaintUrgency.set($event)">
+            <option value="Low">Low Urgency</option>
+            <option value="Medium">Medium Urgency</option>
+            <option value="High">High Urgency</option>
+            <option value="Emergency">🚨 Emergency Priority</option>
+          </select>
+          <button class="btn btn-teal-solid" (click)="submitMaintenanceTicket()">
+            Submit Ticket
+          </button>
+        </div>
+
+        <div class="tickets-grid">
+          <div *ngFor="let t of maintenanceTickets()" class="ticket-row glass-card">
+            <div class="ticket-info">
+              <span class="urgency-tag" [ngClass]="'urgency-' + t.urgency.toLowerCase()">{{ t.urgency }}</span>
+              <strong>{{ t.issue }}</strong>
+              <span class="tech-txt">Technician: <strong>{{ t.technician }}</strong></span>
+            </div>
+            <span class="status-pill blue">{{ t.status }}</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>

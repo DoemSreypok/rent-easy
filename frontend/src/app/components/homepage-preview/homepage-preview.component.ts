@@ -271,7 +271,7 @@ export class HomepagePreviewComponent implements OnInit {
       propertyId: prop._id || prop.id || 'prop-1',
       propertyTitle: prop.title,
       tenantName: user?.name || 'Sophie Taylor',
-      email: user?.email || 'sophie@renteasy.com',
+      email: user?.email || 'pinky@renteasy.com',
       phone: user?.phone || '+1 (555) 382-9912',
       employment: this.applicantEmployment(),
       annualIncome: this.applicantIncome(),

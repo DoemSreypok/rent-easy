@@ -98,10 +98,10 @@ export class AuthModalComponent {
     this.mode.set('login');
     this.errorMessage.set(null);
     if (role === 'tenant') {
-      this.email.set('sophie@renteasy.com');
+      this.email.set('pinky@renteasy.com');
       this.password.set('password123');
     } else {
-      this.email.set('alexander@renteasy.com');
+      this.email.set('lyden@renteasy.com');
       this.password.set('password123');
     }
   }
