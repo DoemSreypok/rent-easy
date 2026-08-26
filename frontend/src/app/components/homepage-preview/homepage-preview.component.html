@@ -1,0 +1,634 @@
+<div class="homepage-container">
+  
+  <!-- Interactive Auth Required Alert Modal / Banner -->
+  <div *ngIf="authAlert()" class="auth-required-alert-backdrop" (click)="authAlert.set(null)">
+    <div class="auth-required-alert-banner glass-card" (click)="$event.stopPropagation()">
+      <div class="alert-content-wrapper">
+        <div class="alert-icon-box">⚠️</div>
+        <div class="alert-text-group">
+          <h3 class="alert-title">Not Saved — Sign In Required</h3>
+          <p class="alert-desc">{{ authAlert()?.message }}</p>
+        </div>
+        <div class="alert-action-group">
+          <button class="btn btn-ghost" (click)="authAlert.set(null)">
+            Cancel
+          </button>
+          <button class="btn btn-teal-solid" (click)="confirmAuthAlert()">
+            🔐 Sign In First →
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Floating Action Toast Alert -->
+  <div *ngIf="actionToast()" class="floating-toast">
+    <span>✨ {{ actionToast() }}</span>
+  </div>
+
+  <!-- 1. Hero Section -->
+  <section class="hero-section" id="hero">
+    <div class="hero-content">
+      <div class="hero-badge">✨ Browse Real Verified Rentals Without Login</div>
+      <h1 class="hero-title">
+        Discover Your Next Space with <span class="highlight">RentEasy</span>
+      </h1>
+      <p class="hero-subtitle">
+        Find luxury condos, modern lofts, and cozy family apartments. Save homes to favorites, contact owners directly, book guided viewings, and submit digital applications.
+      </p>
+
+      <!-- Universal Property Search Bar -->
+      <div class="search-bar-card">
+        <div class="search-field">
+          <label>📍 Search Home / Apartment</label>
+          <input
+            type="text"
+            placeholder="District, building, or keywords (e.g. BKK1, Phnom Penh, The Peak, Pool)"
+            [ngModel]="searchKeyword()"
+            (ngModelChange)="searchKeyword.set($event)"
+            (keyup.enter)="triggerSearch()"
+          />
+        </div>
+
+        <div class="search-divider"></div>
+
+        <div class="search-field">
+          <label>🏠 Property Type</label>
+          <select [ngModel]="selectedType()" (ngModelChange)="selectedType.set($event); triggerSearch()">
+            <option *ngFor="let t of propertyTypes" [value]="t">{{ t }}</option>
+          </select>
+        </div>
+
+        <div class="search-divider"></div>
+
+        <div class="search-field">
+          <label>💰 Max Price: <strong>${{ maxPrice() }} / mo</strong></label>
+          <input
+            type="range"
+            min="300"
+            max="6000"
+            step="50"
+            [ngModel]="maxPrice()"
+            (ngModelChange)="maxPrice.set($event); triggerSearch()"
+          />
+        </div>
+
+        <button class="btn btn-search" (click)="triggerSearch()">
+          🔍 Search Rentals
+        </button>
+      </div>
+
+      <!-- Quick Action Shortcuts -->
+      <div class="dual-journey-ctas">
+        <button class="btn-journey btn-browse" (click)="selectCategory('All')">
+          <span class="journey-icon">🔍</span>
+          <div>
+            <strong>Browse All Properties</strong>
+            <span class="journey-sub">View {{ properties().length }} Live Listings →</span>
+          </div>
+        </button>
+
+        <button class="btn-journey btn-owner-journey" (click)="startOwnerJourney()">
+          <span class="journey-icon">🟣</span>
+          <div>
+            <strong>List Your Property</strong>
+            <span class="journey-sub">Landlord Portal & Tenant Screening →</span>
+          </div>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2. Two User Types & Permissions Callout -->
+  <section class="roles-permissions-section" id="roles-section">
+    <div class="section-container">
+      <div class="section-header">
+        <span class="role-section-pill">👥 TWO DEDICATED USER ROLES</span>
+        <h2>Choose Your Account Type & Permissions</h2>
+        <p>RentEasy provides tailored workflows and security permissions for both renters and property managers.</p>
+      </div>
+
+      <div class="role-cards-comparison">
+        <!-- Role 1: Tenant -->
+        <div class="role-box role-box-tenant">
+          <div class="role-box-header">
+            <span class="role-box-icon">🟢</span>
+            <div>
+              <h3>Tenant Account</h3>
+              <span class="role-box-tag">For Renters & Home Seekers</span>
+            </div>
+          </div>
+          <ul class="role-permissions-list">
+            <li><span class="check-icon">✓</span> <strong>Browse & Search:</strong> Unlimited filterable property listings</li>
+            <li><span class="check-icon">✓</span> <strong>Saved Homes:</strong> Bookmark favorite apartments & condos</li>
+            <li><span class="check-icon">✓</span> <strong>Schedule Viewings:</strong> Book in-person and video tours</li>
+            <li><span class="check-icon">✓</span> <strong>Apply Online:</strong> Verified digital rental application dossiers</li>
+            <li><span class="check-icon">✓</span> <strong>My Rental Hub:</strong> E-sign lease, online rent escrow & maintenance</li>
+          </ul>
+          <div class="role-box-actions">
+            <button class="btn btn-tenant-signup flex-1" (click)="onRequestAuth.emit({ defaultMode: 'register', defaultRole: 'tenant' })">
+              🟢 Create Tenant Account
+            </button>
+            <button class="btn btn-ghost" (click)="onRequestAuth.emit({ defaultMode: 'login', defaultRole: 'tenant' })">
+              Tenant Sign In
+            </button>
+          </div>
+        </div>
+
+        <!-- Role 2: Property Owner -->
+        <div class="role-box role-box-owner">
+          <div class="role-box-header">
+            <span class="role-box-icon">🟣</span>
+            <div>
+              <h3>Property Owner Account</h3>
+              <span class="role-box-tag">For Landlords & Property Managers</span>
+            </div>
+          </div>
+          <ul class="role-permissions-list">
+            <li><span class="check-icon">✓</span> <strong>List & Publish:</strong> 10-step property wizard published live to MongoDB</li>
+            <li><span class="check-icon">✓</span> <strong>Screen Applicants:</strong> Inspect FICO credit scores, income & paystubs</li>
+            <li><span class="check-icon">✓</span> <strong>Approve / Reject:</strong> 1-click decision gate generating legal lease</li>
+            <li><span class="check-icon">✓</span> <strong>Rental Contracts:</strong> Track binding leases & payment escrow ledger</li>
+            <li><span class="check-icon">✓</span> <strong>Maintenance Desk:</strong> Assign certified repair technicians in real-time</li>
+          </ul>
+          <div class="role-box-actions">
+            <button class="btn btn-owner-signup flex-1" (click)="onRequestAuth.emit({ defaultMode: 'register', defaultRole: 'owner' })">
+              🟣 Create Landlord Account
+            </button>
+            <button class="btn btn-ghost" (click)="onRequestAuth.emit({ defaultMode: 'login', defaultRole: 'owner' })">
+              Landlord Sign In
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. Property Categories -->
+  <section class="categories-section">
+    <div class="section-container">
+      <div class="section-header">
+        <h2>Explore by Property Category</h2>
+        <p>Tailored rentals for every lifestyle and budget</p>
+      </div>
+
+      <div class="categories-grid">
+        <div *ngFor="let cat of categories" class="category-card" [class.selected]="selectedType() === cat.type" (click)="selectCategory(cat.type)">
+          <span class="cat-icon">{{ cat.icon }}</span>
+          <h3>{{ cat.name }}</h3>
+          <span class="cat-count">{{ cat.count }}</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. Search Results & Filter / Sort Catalog -->
+  <section class="search-results-section" id="search-results">
+    <div class="section-container">
+      
+      <!-- Filter & Sort Toolbar -->
+      <div class="catalog-toolbar">
+        <div class="toolbar-left">
+          <h2>Available Properties ({{ properties().length }})</h2>
+          <p class="sub-text">Filter and sort properties in real-time</p>
+        </div>
+
+        <div class="toolbar-controls">
+          <!-- Bedrooms Filter -->
+          <div class="filter-item">
+            <label>Bedrooms:</label>
+            <div class="pill-selectors">
+              <button 
+                *ngFor="let b of bedOptions" 
+                class="pill-btn" 
+                [class.active]="selectedBeds() === b"
+                (click)="selectedBeds.set(b); triggerSearch()"
+              >
+                {{ b }}
+              </button>
+            </div>
+          </div>
+
+          <!-- Sort Dropdown -->
+          <div class="filter-item">
+            <label>Sort By:</label>
+            <select [ngModel]="sortBy()" (ngModelChange)="sortBy.set($event); triggerSearch()" class="sort-select">
+              <option value="featured">✨ Featured</option>
+              <option value="price-low">Price: Low to High</option>
+              <option value="price-high">Price: High to Low</option>
+              <option value="rating">Highest Rated ★</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Property Cards Grid -->
+      <div class="properties-grid" *ngIf="!isLoading()">
+        <div *ngFor="let prop of properties()" class="prop-card" (click)="openPropertyDetails(prop)">
+          <div class="prop-image-wrap">
+            <img [src]="prop.image" [alt]="prop.title" loading="lazy" />
+            <span class="prop-type-badge">{{ prop.type }}</span>
+            <span class="prop-verified-badge">✓ Verified</span>
+            
+            <!-- Favorite Heart Button -->
+            <button 
+              class="favorite-heart-btn" 
+              [class.favorited]="isFavorited(prop)"
+              (click)="toggleFavorite(prop, $event)"
+              title="Save to favorites"
+            >
+              {{ isFavorited(prop) ? '❤️' : '🤍' }}
+            </button>
+          </div>
+
+          <div class="prop-body">
+            <div class="prop-price-row">
+              <span class="prop-price">${{ prop.price }} <sub>/ month</sub></span>
+              <span class="prop-rating">★ {{ prop.rating }} ({{ prop.reviewsCount }})</span>
+            </div>
+
+            <h3 class="prop-title">{{ prop.title }}</h3>
+            <p class="prop-location">📍 {{ prop.location }}</p>
+
+            <div class="prop-specs">
+              <span>🛏️ {{ prop.bedrooms }} Beds</span>
+              <span>🚿 {{ prop.bathrooms }} Baths</span>
+              <span>📐 {{ prop.sqft }} sqft</span>
+            </div>
+
+            <div class="prop-amenities">
+              <span *ngFor="let am of prop.amenities.slice(0, 3)" class="amenity-chip">
+                {{ am }}
+              </span>
+              <span *ngIf="prop.amenities.length > 3" class="amenity-chip-more">
+                +{{ prop.amenities.length - 3 }} more
+              </span>
+            </div>
+
+            <div class="prop-actions" (click)="$event.stopPropagation()">
+              <button class="btn btn-sm btn-outline" (click)="openPropertyDetails(prop)">
+                View Details
+              </button>
+              <button class="btn btn-sm btn-tenant" (click)="openPropertyDetails(prop)">
+                Inspect & Action →
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Loading State -->
+      <div *ngIf="isLoading()" class="loading-box">
+        <div class="spinner"></div>
+        <p>Loading verified rental properties from MongoDB...</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4. Popular Locations -->
+  <section class="locations-section">
+    <div class="section-container">
+      <div class="section-header">
+        <h2>Top Rental Locations in Phnom Penh, Cambodia</h2>
+        <p>Explore prime residential districts: BKK1, Tonle Bassac, Toul Kork, Daun Penh, Russian Market & Chbar Ampov</p>
+      </div>
+
+      <div class="locations-grid">
+        <div *ngFor="let loc of popularLocations" class="location-card" (click)="selectLocation(loc.name.split(',')[0])">
+          <img [src]="loc.image" [alt]="loc.name" />
+          <div class="location-overlay">
+            <h3>{{ loc.name }}</h3>
+            <p>{{ loc.count }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5. How RentEasy Works -->
+  <section class="how-it-works-section" id="how-it-works">
+    <div class="section-container">
+      <div class="section-header">
+        <h2>How RentEasy Works</h2>
+        <p>Seamless rental lifecycle from search to keys and maintenance</p>
+      </div>
+
+      <div class="steps-grid">
+        <div class="step-card">
+          <div class="step-num">01</div>
+          <div class="step-icon">🔍</div>
+          <h3>Browse Without Login</h3>
+          <p>Search verified apartments, condos, and villas. Inspect photos, amenities, and transparent pricing freely.</p>
+        </div>
+
+        <div class="step-card">
+          <div class="step-num">02</div>
+          <div class="step-icon">🎯</div>
+          <h3>Choose Your Action</h3>
+          <p>Save to favorites, chat with the landlord, schedule an in-person viewing, or submit your digital rental dossier.</p>
+        </div>
+
+        <div class="step-card">
+          <div class="step-num">03</div>
+          <div class="step-icon">✍️</div>
+          <h3>Sign Lease & Move In</h3>
+          <p>E-sign standard legally compliant rental agreements, pay deposits in escrow, and report maintenance issues in-app.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6. List Your Property CTA Banner -->
+  <section class="owner-cta-banner">
+    <div class="section-container banner-inner">
+      <div class="banner-text">
+        <span class="banner-pill">🟣 FOR PROPERTY OWNERS & LANDLORDS</span>
+        <h2>Are You a Property Owner?</h2>
+        <p>List your apartment, villa, or condo on RentEasy. Screen high-credit tenants, collect rent automatically, and dispatch maintenance technicians seamlessly.</p>
+      </div>
+      <div class="banner-action">
+        <button class="btn btn-lg btn-owner-cta" (click)="startOwnerJourney()">
+          List Your Property Free →
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- 7. Footer -->
+  <footer class="rent-footer">
+    <div class="section-container footer-grid">
+      <div class="footer-brand">
+        <div class="brand">
+          <span class="brand-logo">🏠</span>
+          <span class="brand-name">RentEasy</span>
+        </div>
+        <p class="footer-desc">
+          The next-generation rental property marketplace connecting verified tenants with premier property owners.
+        </p>
+      </div>
+
+      <div class="footer-col">
+        <h4>Tenants</h4>
+        <a (click)="selectCategory('All')">Browse Properties</a>
+        <a (click)="startTenantJourney()">Saved Homes</a>
+        <a (click)="startTenantJourney()">Bookings</a>
+        <a (click)="startTenantJourney()">Tenant Account</a>
+      </div>
+
+      <div class="footer-col">
+        <h4>Landlords</h4>
+        <a (click)="startOwnerJourney()">List Your Property</a>
+        <a (click)="startOwnerJourney()">Owner Dashboard</a>
+        <a (click)="startOwnerJourney()">Review Applicants</a>
+        <a (click)="startOwnerJourney()">Rental Contracts</a>
+      </div>
+
+      <div class="footer-col">
+        <h4>Trust & Legal</h4>
+        <a>Privacy Policy</a>
+        <a>Terms of Service</a>
+        <a>Escrow Trust</a>
+        <a>Fair Housing</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>© 2026 RentEasy Technologies Inc. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <!-- ================= PROPERTY DETAILS MODAL ================= -->
+  <div class="modal-backdrop" *ngIf="activeProperty()" (click)="closePropertyDetails()">
+    <div class="details-modal glass-panel" (click)="$event.stopPropagation()">
+      
+      <button class="modal-close-btn" (click)="closePropertyDetails()">✕</button>
+
+      <div class="details-grid-modal">
+        <!-- Left: Photo Gallery with Floating Heart Button Overlay -->
+        <div class="details-gallery-modal">
+          <img [src]="activeProperty()!.image" [alt]="activeProperty()!.title" />
+          
+          <!-- Floating Heart Button on Picture (Only Icon) -->
+          <button 
+            type="button"
+            class="modal-img-fav-btn" 
+            [class.favorited]="isFavorited(activeProperty()!)"
+            (click)="toggleFavorite(activeProperty()!, $event)"
+            [title]="isFavorited(activeProperty()!) ? 'Remove from Saved Homes' : 'Save to Favorites'"
+          >
+            {{ isFavorited(activeProperty()!) ? '❤️' : '🤍' }}
+          </button>
+
+          <div class="gallery-badges-row">
+            <span class="badge-tag green">✓ Verified Title Deed</span>
+            <span class="badge-tag teal">★ {{ activeProperty()!.rating }} SuperHost</span>
+            <span class="badge-tag blue">{{ activeProperty()!.type }}</span>
+          </div>
+        </div>
+
+        <!-- Right: Specs, Pricing & Actions -->
+        <div class="details-info-modal">
+          <div class="details-price-row">
+            <div>
+              <span class="rent-amount">${{ activeProperty()!.price }}</span>
+              <span class="rent-period">/ month</span>
+              <div class="deposit-txt">Security Deposit: ${{ activeProperty()!.deposit }} (Escrow Protected)</div>
+            </div>
+          </div>
+
+          <h2 class="details-title">{{ activeProperty()!.title }}</h2>
+          <p class="details-location">📍 {{ activeProperty()!.location }}</p>
+
+          <div class="specs-chips-row">
+            <span class="spec-chip">🛏️ {{ activeProperty()!.bedrooms }} Bedrooms</span>
+            <span class="spec-chip">🚿 {{ activeProperty()!.bathrooms }} Bathrooms</span>
+            <span class="spec-chip">📐 {{ activeProperty()!.sqft }} sqft</span>
+          </div>
+
+          <div class="details-section">
+            <label>Amenities Included</label>
+            <div class="amenities-pills">
+              <span *ngFor="let am of activeProperty()!.amenities" class="am-pill">
+                ✓ {{ am }}
+              </span>
+            </div>
+          </div>
+
+          <div class="details-section">
+            <label>Description</label>
+            <p class="details-desc">{{ activeProperty()!.description }}</p>
+          </div>
+
+          <div class="landlord-info-card">
+            <div class="avatar-circle">👤</div>
+            <div>
+              <strong>{{ activeProperty()!.owner.name }}</strong>
+              <div class="landlord-meta">
+                <span>{{ activeProperty()!.owner.trustScore }}</span> • Response Time: {{ activeProperty()!.owner.responseRate }}
+              </div>
+            </div>
+          </div>
+
+          <!-- ================= EXACT FLOW: ACTION? BOX ================= -->
+          <div class="action-choice-box">
+            <div class="action-choice-title">⚡ CHOOSE AN ACTION FOR THIS PROPERTY</div>
+            
+            <div class="action-buttons-grid">
+              <!-- Action 1: Favorite -->
+              <button 
+                class="btn-action-tile tile-favorite" 
+                [class.active]="isFavorited(activeProperty()!)"
+                (click)="toggleFavorite(activeProperty()!)"
+              >
+                <span class="action-icon">{{ isFavorited(activeProperty()!) ? '❤️' : '🤍' }}</span>
+                <div>
+                  <strong>{{ isFavorited(activeProperty()!) ? 'In Saved Homes' : 'Save to Favorites' }}</strong>
+                  <small>Add to Saved Homes</small>
+                </div>
+              </button>
+
+              <!-- Action 2: Contact Owner -->
+              <button 
+                class="btn-action-tile tile-contact" 
+                (click)="handleContactClick(activeProperty()!)"
+              >
+                <span class="action-icon">💬</span>
+                <div>
+                  <strong>Contact Landlord</strong>
+                  <small>Ask questions directly</small>
+                </div>
+              </button>
+
+              <!-- Action 3: Book Viewing -->
+              <button 
+                class="btn-action-tile tile-book" 
+                (click)="handleBookViewingClick(activeProperty()!)"
+              >
+                <span class="action-icon">📅</span>
+                <div>
+                  <strong>Book Viewing</strong>
+                  <small>Schedule in-person / video</small>
+                </div>
+              </button>
+
+              <!-- Action 4: Apply for Rental -->
+              <button 
+                class="btn-action-tile tile-apply" 
+                (click)="handleApplyClick(activeProperty()!)"
+              >
+                <span class="action-icon">📝</span>
+                <div>
+                  <strong>Apply for Rental</strong>
+                  <small>Submit digital dossier</small>
+                </div>
+              </button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= SUB-MODAL: BOOK VIEWING ================= -->
+  <div class="modal-backdrop sub-modal" *ngIf="showBookingModal()" (click)="showBookingModal.set(false)">
+    <div class="sub-modal-card glass-panel" (click)="$event.stopPropagation()">
+      <button class="modal-close-btn" (click)="showBookingModal.set(false)">✕</button>
+
+      <h3>📅 Book Viewing for {{ activeProperty()?.title }}</h3>
+      <p class="sub-txt">Select your preferred date, time slot, and viewing format.</p>
+
+      <div class="form-group">
+        <label>Select Date</label>
+        <input type="date" [ngModel]="bookingDate()" (ngModelChange)="bookingDate.set($event)" />
+      </div>
+
+      <div class="form-group">
+        <label>Select Time Slot</label>
+        <select [ngModel]="bookingTimeSlot()" (ngModelChange)="bookingTimeSlot.set($event)">
+          <option value="10:00 - 11:00">10:00 AM - 11:00 AM</option>
+          <option value="14:00 - 15:00">02:00 PM - 03:00 PM</option>
+          <option value="16:30 - 17:30">04:30 PM - 05:30 PM</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Viewing Format</label>
+        <select [ngModel]="bookingType()" (ngModelChange)="bookingType.set($event)">
+          <option value="In-Person Tour">In-Person Tour (Meet Landlord at Property)</option>
+          <option value="Live Video Call">Live Guided Video Tour (Zoom / FaceTime)</option>
+        </select>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn btn-ghost" (click)="showBookingModal.set(false)">Cancel</button>
+        <button class="btn btn-teal" (click)="confirmBooking()">Confirm Appointment →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= SUB-MODAL: CONTACT OWNER ================= -->
+  <div class="modal-backdrop sub-modal" *ngIf="showContactModal()" (click)="showContactModal.set(false)">
+    <div class="sub-modal-card glass-panel" (click)="$event.stopPropagation()">
+      <button class="modal-close-btn" (click)="showContactModal.set(false)">✕</button>
+
+      <h3>💬 Contact {{ activeProperty()?.owner?.name }}</h3>
+      <p class="sub-txt">Send an inquiry directly to the property landlord.</p>
+
+      <div class="form-group">
+        <label>Your Message / Question</label>
+        <textarea 
+          rows="4" 
+          placeholder="e.g. Hi Alexander, is parking included with this penthouse? When is the earliest move-in date?"
+          [ngModel]="contactMessage()"
+          (ngModelChange)="contactMessage.set($event)"
+        ></textarea>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn btn-ghost" (click)="showContactModal.set(false)">Cancel</button>
+        <button class="btn btn-teal" (click)="sendContactMessage()">Send Message →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= SUB-MODAL: RENTAL APPLICATION ================= -->
+  <div class="modal-backdrop sub-modal" *ngIf="showApplyModal()" (click)="showApplyModal.set(false)">
+    <div class="sub-modal-card glass-panel wide" (click)="$event.stopPropagation()">
+      <button class="modal-close-btn" (click)="showApplyModal.set(false)">✕</button>
+
+      <h3>📝 Rental Application for {{ activeProperty()?.title }}</h3>
+      <p class="sub-txt">Submit your verified digital dossier to the landlord for review.</p>
+
+      <div class="form-row-2">
+        <div class="form-group">
+          <label>Current Employment / Employer</label>
+          <input type="text" [ngModel]="applicantEmployment()" (ngModelChange)="applicantEmployment.set($event)" />
+        </div>
+        <div class="form-group">
+          <label>Annual Verified Income</label>
+          <input type="text" [ngModel]="applicantIncome()" (ngModelChange)="applicantIncome.set($event)" />
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Note to Landlord</label>
+        <textarea rows="3" [ngModel]="applicantMessage()" (ngModelChange)="applicantMessage.set($event)"></textarea>
+      </div>
+
+      <div class="docs-checklist-box">
+        <label>Included Verifications:</label>
+        <div class="docs-tags">
+          <span>✓ Government ID Verified</span>
+          <span>✓ Paystubs Attached</span>
+          <span>✓ Credit Score {{ authService.currentUser()?.creditScore || 785 }}</span>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn btn-ghost" (click)="showApplyModal.set(false)">Cancel</button>
+        <button class="btn btn-teal" (click)="submitRentalApplication()">Submit Application →</button>
+      </div>
+    </div>
+  </div>
+
+</div>

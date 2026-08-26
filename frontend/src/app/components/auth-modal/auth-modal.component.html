@@ -1,0 +1,173 @@
+<div class="modal-backdrop" (click)="onClose.emit()">
+  <div class="auth-card glass-panel" (click)="$event.stopPropagation()">
+    
+    <!-- Modal Close Button -->
+    <button class="close-btn" (click)="onClose.emit()">✕</button>
+
+    <!-- Header Brand -->
+    <div class="auth-header">
+      <div class="brand-badge">
+        <span class="logo-emoji">🏠</span>
+        <span class="brand-title">RentEasy</span>
+      </div>
+      <h2>{{ mode() === 'login' ? 'Welcome Back' : 'Create Your Account' }}</h2>
+      <p class="subtitle">
+        {{ mode() === 'login' 
+          ? 'Sign in to access your rentals, applications, and properties' 
+          : 'Join thousands of verified tenants and premier property owners' }}
+      </p>
+    </div>
+
+    <!-- Mode Switcher Tabs -->
+    <div class="mode-tabs">
+      <button 
+        class="tab-btn" 
+        [class.active]="mode() === 'login'" 
+        (click)="setMode('login')"
+      >
+        Sign In
+      </button>
+      <button 
+        class="tab-btn" 
+        [class.active]="mode() === 'register'" 
+        (click)="setMode('register')"
+      >
+        Register
+      </button>
+    </div>
+
+    <!-- Role Selection (Only on Register) -->
+    <div class="role-selector" *ngIf="mode() === 'register'">
+      <label class="section-label">Select Your Account Type:</label>
+      <div class="role-options">
+        <div 
+          class="role-card role-tenant" 
+          [class.selected]="role() === 'tenant'"
+          (click)="role.set('tenant')"
+        >
+          <span class="role-icon">🟢</span>
+          <div>
+            <strong>I am a Tenant</strong>
+            <small>Browse, book viewings & rent properties</small>
+          </div>
+        </div>
+
+        <div 
+          class="role-card role-owner" 
+          [class.selected]="role() === 'owner'"
+          (click)="role.set('owner')"
+        >
+          <span class="role-icon">🟣</span>
+          <div>
+            <strong>I am a Property Owner</strong>
+            <small>List rentals, screen applicants & collect rent</small>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Error Banner -->
+    <div *ngIf="errorMessage()" class="error-banner">
+      ⚠️ <span>{{ errorMessage() }}</span>
+    </div>
+
+    <!-- Auth Form -->
+    <form (ngSubmit)="onSubmit()" class="auth-form">
+      <!-- Name (Register Only) -->
+      <div class="form-group" *ngIf="mode() === 'register'">
+        <label>Full Name *</label>
+        <input 
+          type="text" 
+          placeholder="e.g., Sophie Taylor" 
+          [ngModel]="name()" 
+          (ngModelChange)="name.set($event)" 
+          name="name"
+          required 
+        />
+      </div>
+
+      <!-- Email -->
+      <div class="form-group">
+        <label>Email Address *</label>
+        <input 
+          type="email" 
+          placeholder="e.g., name@example.com" 
+          [ngModel]="email()" 
+          (ngModelChange)="email.set($event)" 
+          name="email"
+          required 
+        />
+      </div>
+
+      <!-- Password with Eye Hide/Show Toggle -->
+      <div class="form-group">
+        <label>Password *</label>
+        <div class="password-input-wrapper">
+          <input 
+            [type]="showPassword() ? 'text' : 'password'" 
+            placeholder="••••••••" 
+            [ngModel]="password()" 
+            (ngModelChange)="password.set($event)" 
+            name="password"
+            required 
+          />
+          <button 
+            type="button" 
+            class="btn-toggle-password" 
+            (click)="toggleShowPassword()" 
+            [title]="showPassword() ? 'Hide password' : 'Show password'"
+            tabindex="-1"
+          >
+            <span class="eye-icon">{{ showPassword() ? '🙈' : '👁️' }}</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Optional Extra Fields for Tenant Registration -->
+      <div class="form-row-2" *ngIf="mode() === 'register' && role() === 'tenant'">
+        <div class="form-group">
+          <label>Phone Number</label>
+          <input 
+            type="tel" 
+            placeholder="+1 (555) 000-0000" 
+            [ngModel]="phone()" 
+            (ngModelChange)="phone.set($event)" 
+            name="phone"
+          />
+        </div>
+        <div class="form-group">
+          <label>Occupation / Employer</label>
+          <input 
+            type="text" 
+            placeholder="e.g., Software Engineer" 
+            [ngModel]="employment()" 
+            (ngModelChange)="employment.set($event)" 
+            name="employment"
+          />
+        </div>
+      </div>
+
+      <!-- Submit Button -->
+      <button type="submit" class="btn btn-submit" [disabled]="isLoading()">
+        <span *ngIf="!isLoading()">
+          {{ mode() === 'login' ? 'Sign In to RentEasy →' : 'Complete Registration →' }}
+        </span>
+        <span *ngIf="isLoading()">Processing...</span>
+      </button>
+    </form>
+
+    <!-- Auto-Fill Demo Credentials Helper -->
+    <div class="demo-login-box">
+      <span class="demo-label">⚡ AUTO-FILL CREDENTIALS (CLICK TO FILL)</span>
+      <div class="demo-buttons">
+        <button type="button" class="btn btn-demo-tenant" (click)="fillCredentials('tenant')">
+          🟢 Fill Tenant (Sophie)
+        </button>
+        <button type="button" class="btn btn-demo-owner" (click)="fillCredentials('owner')">
+          🟣 Fill Landlord (Alexander)
+        </button>
+      </div>
+    </div>
+
+  </div>
+</div>

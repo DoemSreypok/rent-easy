@@ -1,1 +1,487 @@
-/* You can add global styles to this file, and also import other style files */
+@import "tailwindcss";
+
+/* ===================================================
+   RENT EASY DESIGN SYSTEM: DAY & NIGHT MODE TOKENS
+   =================================================== */
+
+:root, :root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg-app: #090d16;
+  --bg-header: rgba(15, 23, 42, 0.85);
+  --bg-surface: #0f172a;
+  --bg-surface-glass: rgba(15, 23, 42, 0.75);
+  --bg-subtle: #1e293b;
+  --bg-input: rgba(0, 0, 0, 0.4);
+  --text-primary: #f8fafc;
+  --text-secondary: #cbd5e1;
+  --text-muted: #94a3b8;
+  --border-color: rgba(255, 255, 255, 0.1);
+  --border-subtle: rgba(255, 255, 255, 0.06);
+  --card-shadow: 0 15px 35px -10px rgba(0, 0, 0, 0.6);
+  --hero-radial: radial-gradient(circle at 50% 20%, rgba(13, 148, 136, 0.22) 0%, transparent 65%);
+}
+
+:root[data-theme="light"], .light-theme {
+  color-scheme: light;
+  --bg-app: #f8fafc;
+  --bg-header: rgba(255, 255, 255, 0.9);
+  --bg-surface: #ffffff;
+  --bg-surface-glass: rgba(255, 255, 255, 0.9);
+  --bg-subtle: #f1f5f9;
+  --bg-input: #ffffff;
+  --text-primary: #0f172a;
+  --text-secondary: #334155;
+  --text-muted: #64748b;
+  --border-color: rgba(0, 0, 0, 0.1);
+  --border-subtle: rgba(0, 0, 0, 0.06);
+  --card-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.06), 0 2px 6px rgba(0, 0, 0, 0.04);
+  --hero-radial: radial-gradient(circle at 50% 20%, rgba(20, 184, 166, 0.15) 0%, transparent 70%);
+}
+
+/* Base Body Styles */
+html, body {
+  margin: 0;
+  padding: 0;
+  background-color: var(--bg-app);
+  color: var(--text-primary);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Global Light Theme Overrides */
+.light-theme {
+  background-color: #f8fafc !important;
+  color: #0f172a !important;
+}
+
+.light-theme .app-layout {
+  background-color: #f8fafc;
+  color: #0f172a;
+}
+
+.light-theme .top-nav-bar {
+  background: rgba(255, 255, 255, 0.88) !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+}
+
+.light-theme .nav-tab {
+  color: #475569 !important;
+}
+
+.light-theme .nav-tab:hover {
+  background: #f1f5f9 !important;
+  color: #0f172a !important;
+}
+
+.light-theme .nav-tab.active {
+  background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%) !important;
+  color: #ffffff !important;
+}
+
+.light-theme .user-chip {
+  background: #f1f5f9 !important;
+  border-color: #e2e8f0 !important;
+}
+
+.light-theme .user-name {
+  color: #0f172a !important;
+}
+
+.light-theme .status-indicator {
+  background: #f1f5f9 !important;
+  border-color: #e2e8f0 !important;
+  color: #475569 !important;
+}
+
+.light-theme .btn-ghost {
+  color: #1e293b !important;
+  border-color: #cbd5e1 !important;
+}
+
+.light-theme .btn-ghost:hover {
+  background: #f1f5f9 !important;
+}
+
+/* Light Theme: Homepage & Cards */
+.light-theme .homepage-container {
+  background: #f8fafc !important;
+  color: #0f172a !important;
+}
+
+.light-theme .hero-section {
+  background: radial-gradient(circle at 50% 20%, rgba(20, 184, 166, 0.16) 0%, transparent 65%) !important;
+}
+
+.light-theme .hero-title {
+  color: #0f172a !important;
+}
+
+.light-theme .hero-subtitle {
+  color: #475569 !important;
+}
+
+.light-theme .search-bar-card {
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  box-shadow: 0 20px 45px -10px rgba(0, 0, 0, 0.08) !important;
+}
+
+.light-theme .search-field label {
+  color: #64748b !important;
+}
+
+.light-theme .search-field input,
+.light-theme .search-field select {
+  color: #0f172a !important;
+}
+
+.light-theme .search-field select option {
+  background: #ffffff !important;
+  color: #0f172a !important;
+}
+
+.light-theme .search-divider {
+  background: #e2e8f0 !important;
+}
+
+.light-theme .btn-journey {
+  background: #ffffff !important;
+  border-color: #cbd5e1 !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.04) !important;
+}
+
+.light-theme .btn-journey strong {
+  color: #0f172a !important;
+}
+
+.light-theme .journey-sub {
+  color: #64748b !important;
+}
+
+.light-theme .btn-browse {
+  border-color: #0d9488 !important;
+}
+
+.light-theme .category-card {
+  background: #ffffff !important;
+  border-color: #e2e8f0 !important;
+  color: #0f172a !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+}
+
+.light-theme .category-card h3 {
+  color: #0f172a !important;
+}
+
+.light-theme .prop-card {
+  background: #ffffff !important;
+  border-color: #e2e8f0 !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.06) !important;
+}
+
+.light-theme .prop-title {
+  color: #0f172a !important;
+}
+
+.light-theme .prop-location {
+  color: #64748b !important;
+}
+
+.light-theme .prop-specs {
+  color: #475569 !important;
+  border-color: #e2e8f0 !important;
+}
+
+.light-theme .amenity-chip {
+  background: #f1f5f9 !important;
+  color: #475569 !important;
+}
+
+.light-theme .role-box {
+  background: #ffffff !important;
+  box-shadow: 0 15px 35px -10px rgba(0, 0, 0, 0.06) !important;
+}
+
+.light-theme .role-box-header h3 {
+  color: #0f172a !important;
+}
+
+.light-theme .role-permissions-list li {
+  color: #334155 !important;
+}
+
+.light-theme .step-card {
+  background: #ffffff !important;
+  border-color: #e2e8f0 !important;
+  color: #0f172a !important;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.04);
+}
+
+.light-theme .step-card h3 {
+  color: #0f172a !important;
+}
+
+.light-theme .step-card p {
+  color: #475569 !important;
+}
+
+.light-theme .rent-footer {
+  background: #f1f5f9 !important;
+  border-color: #e2e8f0 !important;
+}
+
+.light-theme .footer-col h4 {
+  color: #0f172a !important;
+}
+
+.light-theme .footer-col a {
+  color: #64748b !important;
+}
+
+.light-theme .footer-col a:hover {
+  color: #0d9488 !important;
+}
+
+.light-theme .footer-desc {
+  color: #64748b !important;
+}
+
+.light-theme .footer-bottom {
+  border-color: #e2e8f0 !important;
+  color: #94a3b8 !important;
+}
+
+/* Light Theme: Portals & Dashboards */
+.light-theme .glass-card,
+.light-theme .details-modal,
+.light-theme .sub-modal-card,
+.light-theme .auth-card {
+  background: #ffffff !important;
+  border-color: #e2e8f0 !important;
+  color: #0f172a !important;
+  box-shadow: 0 20px 50px -15px rgba(0, 0, 0, 0.12) !important;
+}
+
+.light-theme .portal-container {
+  color: #0f172a !important;
+}
+
+.light-theme .portal-title-row h2 {
+  color: #0f172a !important;
+}
+
+.light-theme .subtitle,
+.light-theme .panel-desc {
+  color: #64748b !important;
+}
+
+.light-theme .tab-link {
+  background: #ffffff !important;
+  border-color: #e2e8f0 !important;
+  color: #475569 !important;
+}
+
+.light-theme .tab-link:hover {
+  background: #f1f5f9 !important;
+}
+
+.light-theme .tab-link.active {
+  background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%) !important;
+  color: #ffffff !important;
+}
+
+.light-theme .form-group label,
+.light-theme .applicant-docs label,
+.light-theme .applicant-note label {
+  color: #334155 !important;
+}
+
+.light-theme .form-group input,
+.light-theme .form-group select,
+.light-theme .form-group textarea,
+.light-theme .report-form-row input,
+.light-theme .report-form-row select,
+.light-theme .chat-input-bar input {
+  background: #ffffff !important;
+  border: 1px solid #cbd5e1 !important;
+  color: #0f172a !important;
+}
+
+.light-theme .stat-box {
+  background: #f8fafc !important;
+}
+
+.light-theme .stat-lbl {
+  color: #64748b !important;
+}
+
+.light-theme .stat-val {
+  color: #0f172a !important;
+}
+
+.light-theme .chat-messages-box {
+  background: #f8fafc !important;
+}
+
+.light-theme .sender-name {
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+
+.light-theme .p-row {
+  background: #f8fafc !important;
+  color: #0f172a !important;
+}
+
+.light-theme .contract-details {
+  background: #f8fafc !important;
+  color: #0f172a !important;
+}
+
+.light-theme .app-details-grid {
+  background: #f8fafc !important;
+  color: #0f172a !important;
+}
+
+.light-theme .pill-btn {
+  background: #ffffff !important;
+  border-color: #cbd5e1 !important;
+  color: #475569 !important;
+}
+
+.light-theme .pill-btn.active {
+  background: #0d9488 !important;
+  color: #ffffff !important;
+  border-color: #0d9488 !important;
+}
+
+.light-theme .sort-select {
+  background: #ffffff !important;
+  border-color: #cbd5e1 !important;
+  color: #0f172a !important;
+}
+
+.light-theme .action-choice-box {
+  background: #f0fdfa !important;
+  border-color: #0d9488 !important;
+}
+
+.light-theme .btn-action-tile {
+  background: #ffffff !important;
+  border-color: #cbd5e1 !important;
+}
+
+.light-theme .btn-action-tile strong {
+  color: #0f172a !important;
+}
+
+/* Ensure all text, headings, and letters in Day Mode have high contrast */
+.light-theme h1,
+.light-theme h2,
+.light-theme h3,
+.light-theme h4,
+.light-theme h5,
+.light-theme h6 {
+  color: #0f172a;
+}
+
+.light-theme p,
+.light-theme span:not(.badge):not(.status-pill):not(.role-badge):not(.slide-icon):not(.theme-icon):not(.logo-emoji):not(.btn *),
+.light-theme strong:not(.btn *),
+.light-theme label {
+  color: inherit;
+}
+
+.light-theme .site-nav-link {
+  color: #334155 !important;
+}
+
+.light-theme .site-nav-link:hover {
+  color: #0d9488 !important;
+  background: #f1f5f9 !important;
+}
+
+.light-theme .site-nav-link.active {
+  color: #0d9488 !important;
+  background: rgba(13, 148, 136, 0.1) !important;
+}
+
+.light-theme .user-menu-btn {
+  background: #ffffff !important;
+  border-color: #cbd5e1 !important;
+}
+
+.light-theme .user-name {
+  color: #0f172a !important;
+}
+
+.light-theme .user-dropdown-menu {
+  background: #ffffff !important;
+  border-color: #e2e8f0 !important;
+  box-shadow: 0 20px 45px -10px rgba(0, 0, 0, 0.12) !important;
+  color: #0f172a !important;
+}
+
+.light-theme .dropdown-user-name {
+  color: #0f172a !important;
+}
+
+.light-theme .dropdown-link-item {
+  color: #0f172a !important;
+}
+
+.light-theme .dropdown-link-item:hover {
+  background: #f1f5f9 !important;
+}
+
+.light-theme .btn-teal-solid,
+.light-theme .btn-search,
+.light-theme .btn-list-property,
+.light-theme .btn-submit,
+.light-theme .btn-owner-cta {
+  background: #0d9488 !important;
+  color: #ffffff !important;
+}
+
+.light-theme .btn-teal-solid:hover,
+.light-theme .btn-search:hover,
+.light-theme .btn-list-property:hover,
+.light-theme .btn-submit:hover,
+.light-theme .btn-owner-cta:hover {
+  background: #0f766e !important;
+  color: #ffffff !important;
+}
+
+.light-theme .btn-outline {
+  border-color: #cbd5e1 !important;
+  color: #1e293b !important;
+}
+
+.light-theme .btn-outline:hover {
+  background: #f1f5f9 !important;
+  border-color: #0d9488 !important;
+}
+
+.light-theme .btn-ghost {
+  border-color: #cbd5e1 !important;
+  color: #1e293b !important;
+}
+
+.light-theme .btn-ghost:hover {
+  background: #f1f5f9 !important;
+}
+
+/* Global button text & icon centering */
+button,
+.btn,
+.btn-journey,
+.tab-btn,
+.tab-link,
+.slide-segment,
+.pill-btn,
+.btn-action-tile {
+  text-align: center;
+  justify-content: center;
+  align-items: center;
+}
+

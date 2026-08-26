@@ -1,0 +1,801 @@
+<div class="portal-container">
+  
+  <!-- ========================================================================= -->
+  <!-- 1. TENANT PORTAL ACCESS & PERMISSION GATES                                -->
+  <!-- ========================================================================= -->
+  <ng-container *ngIf="portalMode() === 'tenant' || portalMode() === 'active-tenancy'">
+    
+    <!-- Gate 1A: Not Logged In (Guest) -->
+    <div *ngIf="!authService.isLoggedIn()" class="access-restricted-card glass-card">
+      <div class="lock-icon-box">🔒</div>
+      <h2>Tenant Sign In Required</h2>
+      <p class="lock-desc">
+        You must be signed in with a <strong>Tenant Account</strong> to access your Saved Homes, Bookings, Rental Applications, and Active Lease.
+      </p>
+      <div class="lock-actions">
+        <button class="btn btn-teal-solid" (click)="openLoginModal('tenant')">
+          Sign In as Tenant →
+        </button>
+      </div>
+    </div>
+
+    <!-- Gate 1B: Logged in as Property Owner (Wrong Role) -->
+    <div *ngIf="authService.isLoggedIn() && authService.isOwner()" class="access-restricted-card glass-card">
+      <div class="lock-icon-box owner-lock">🟣</div>
+      <h2>Tenant Portal Restricted to Renters</h2>
+      <p class="lock-desc">
+        You are currently signed in as a <strong>Property Owner ({{ authService.currentUser()?.name }})</strong>.
+        This portal manages tenant bookings, saved homes, and personal rental contracts.
+      </p>
+      <div class="lock-actions">
+        <button class="btn btn-teal-solid" (click)="authService.logout()">
+          Sign Out to Switch Account
+        </button>
+      </div>
+    </div>
+
+    <!-- Gate 1C: Authorized Tenant User View -->
+    <div *ngIf="authService.isLoggedIn() && authService.isTenant()" class="authorized-portal-view">
+      
+      <!-- Tenant Portal Header -->
+      <div class="portal-header glass-card">
+        <div class="portal-title-row">
+          <div>
+            <span class="portal-badge badge-tenant">🟢 VERIFIED TENANT PORTAL</span>
+            <h2>Welcome back, {{ authService.currentUser()?.name }}</h2>
+            <p class="subtitle">
+              Manage your saved homes, view scheduled viewing tours, track rental applications, and pay rent.
+            </p>
+          </div>
+        </div>
+
+        <!-- Tenant Navigation Sub-Tabs -->
+        <div class="sub-nav-tabs">
+          <button 
+            class="tab-link" 
+            [class.active]="tenantNavTab() === 'saved'"
+            (click)="tenantNavTab.set('saved')"
+          >
+            💖 Saved Homes ({{ savedProperties().length }})
+          </button>
+          <button 
+            class="tab-link" 
+            [class.active]="tenantNavTab() === 'bookings'"
+            (click)="tenantNavTab.set('bookings')"
+          >
+            📅 Scheduled Bookings ({{ bookings().length }})
+          </button>
+          <button 
+            class="tab-link" 
+            [class.active]="tenantNavTab() === 'applications'"
+            (click)="tenantNavTab.set('applications')"
+          >
+            📝 Applications Tracker ({{ applications().length }})
+          </button>
+          <button 
+            class="tab-link" 
+            [class.active]="tenantNavTab() === 'my-rental'"
+            (click)="tenantNavTab.set('my-rental')"
+          >
+            🏠 My Rental & Payments
+          </button>
+          <button 
+            class="tab-link" 
+            [class.active]="tenantNavTab() === 'messages'"
+            (click)="tenantNavTab.set('messages')"
+          >
+            💬 Messages ({{ messages().length }})
+          </button>
+        </div>
+      </div>
+
+      <!-- Tenant Content Panels -->
+      <div class="portal-content">
+        
+        <!-- 1A. Saved Homes Tab -->
+        <div class="content-panel" *ngIf="tenantNavTab() === 'saved'">
+          <div class="panel-header-row">
+            <div>
+              <h3>💖 Saved Homes / Favorites</h3>
+              <p class="panel-desc">Properties you marked with a heart while browsing.</p>
+            </div>
+          </div>
+
+          <div class="saved-grid" *ngIf="savedProperties().length > 0; else noSaved">
+            <div *ngFor="let prop of savedProperties()" class="saved-card glass-card">
+              <img [src]="prop.image" [alt]="prop.title" class="saved-img" />
+              <div class="saved-info">
+                <div class="saved-header-row">
+                  <span class="saved-price">${{ prop.price }} <sub>/ mo</sub></span>
+                  <span class="saved-type-tag">{{ prop.type }}</span>
+                </div>
+                <h4>{{ prop.title }}</h4>
+                <p class="saved-loc">📍 {{ prop.location }}</p>
+                <div class="saved-specs">🛏️ {{ prop.bedrooms }} Beds • 🚿 {{ prop.bathrooms }} Baths • 📐 {{ prop.sqft }} sqft</div>
+              </div>
+              <div class="saved-actions">
+                <button class="btn btn-outline" (click)="removeFavorite(prop)">
+                  🗑️ Remove
+                </button>
+                <button class="btn btn-teal-solid" (click)="tenantNavTab.set('bookings')">
+                  📅 Book Viewing →
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <ng-template #noSaved>
+            <div class="empty-state-box">
+              <span class="empty-icon">🤍</span>
+              <h4>No Saved Homes Yet</h4>
+              <p>Browse available properties and click the heart icon to save listings here.</p>
+            </div>
+          </ng-template>
+        </div>
+
+        <!-- 1B. Bookings Tab -->
+        <div class="content-panel" *ngIf="tenantNavTab() === 'bookings'">
+          <div class="panel-header-row">
+            <div>
+              <h3>📅 Scheduled Viewing Appointments</h3>
+              <p class="panel-desc">In-person and virtual guided tours booked with property owners.</p>
+            </div>
+          </div>
+
+          <div class="bookings-list" *ngIf="bookings().length > 0; else noBookings">
+            <div *ngFor="let b of bookings()" class="booking-item glass-card">
+              <div class="booking-badge-col">
+                <span class="booking-day">📅 {{ b.date }}</span>
+                <span class="booking-time">{{ b.timeSlot }}</span>
+              </div>
+
+              <div class="booking-details-col">
+                <h4>{{ b.propertyTitle }}</h4>
+                <p>Viewing Format: <strong>{{ b.type }}</strong></p>
+                <span class="status-pill green">✓ {{ b.status }}</span>
+              </div>
+
+              <div class="booking-action-col">
+                <button class="btn btn-sm btn-outline" (click)="tenantNavTab.set('messages')">
+                  💬 Message Landlord
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <ng-template #noBookings>
+            <div class="empty-state-box">
+              <span class="empty-icon">📅</span>
+              <h4>No Scheduled Viewings</h4>
+              <p>Book a tour from any property details page to schedule viewings.</p>
+            </div>
+          </ng-template>
+        </div>
+
+        <!-- 1C. Applications Tracker -->
+        <div class="content-panel" *ngIf="tenantNavTab() === 'applications'">
+          <div class="panel-header-row">
+            <div>
+              <h3>📝 Submitted Rental Applications</h3>
+              <p class="panel-desc">Track real-time landlord review, credit checks, and approval status.</p>
+            </div>
+          </div>
+
+          <div class="apps-list">
+            <div *ngFor="let app of applications()" class="app-card glass-card">
+              <div class="app-top-row">
+                <div>
+                  <h4>{{ app.propertyTitle }}</h4>
+                  <p class="app-date">Submitted: {{ app.submittedAt | date:'mediumDate' }}</p>
+                </div>
+                <span class="status-pill" [ngClass]="app.status === 'Approved' ? 'green' : (app.status === 'Rejected' ? 'red' : 'yellow')">
+                  {{ app.status | uppercase }}
+                </span>
+              </div>
+
+              <div class="app-details-grid">
+                <div><span>Applicant:</span> <strong>{{ app.tenantName }}</strong></div>
+                <div><span>Income Verified:</span> <strong>{{ app.annualIncome }}</strong></div>
+                <div><span>Credit Score:</span> <strong>{{ app.creditScore }}</strong></div>
+              </div>
+
+              <div class="app-footer-actions" *ngIf="app.status === 'Approved'">
+                <span class="approved-msg">🎉 Congratulations! Your application has been approved.</span>
+                <button class="btn btn-sm btn-teal-solid" (click)="tenantNavTab.set('my-rental')">
+                  ✍️ View Active Rental & Sign Lease →
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 1D. My Rental & Rent Payment & Maintenance -->
+        <div class="content-panel" *ngIf="tenantNavTab() === 'my-rental'">
+          <div class="panel-header-row">
+            <div>
+              <h3>🏠 My Rental — Active Tenancy Hub</h3>
+              <p class="panel-desc">Manage digital lease, pay monthly rent via escrow, and submit repair tickets.</p>
+            </div>
+          </div>
+
+          <div class="rental-hub-grid">
+            <!-- Active Lease Card -->
+            <div class="lease-active-card glass-card">
+              <span class="status-pill green">Active 12-Month Tenancy</span>
+              <h3>{{ activeRentalProperty()?.title }}</h3>
+              <p class="loc">📍 {{ activeRentalProperty()?.location }}</p>
+
+              <div class="lease-meta-row">
+                <div><span>Monthly Rent:</span> <strong>${{ activeRentalProperty()?.price }} / mo</strong></div>
+                <div><span>Security Deposit:</span> <strong>${{ activeRentalProperty()?.deposit }} (Escrow)</strong></div>
+                <div><span>Landlord:</span> <strong>{{ activeRentalProperty()?.owner?.name }}</strong></div>
+              </div>
+
+              <div class="lease-digital-sign">
+                <span>✓ Cryptographically E-Signed Digital Contract</span>
+                <button class="btn btn-sm btn-outline">📄 View Lease PDF</button>
+              </div>
+            </div>
+
+            <!-- Rent Payment Card -->
+            <div class="rent-payment-card glass-card">
+              <h4>💰 Rent Payment & Escrow</h4>
+              <p class="sub">Next Rent Due: <strong>September 1, 2026 ($3,800.00)</strong></p>
+
+              <div class="payment-ledger">
+                <div class="ledger-item">
+                  <span>Security Deposit:</span>
+                  <span class="status-pill green">✓ Held in Escrow ($3,800)</span>
+                </div>
+                <div class="ledger-item">
+                  <span>First Month Rent:</span>
+                  <span class="status-pill green">✓ Paid in Full ($3,800)</span>
+                </div>
+              </div>
+
+              <button class="btn btn-teal-solid full-width">
+                💳 Pay Rent Online / Enable Auto-Pay →
+              </button>
+            </div>
+
+            <!-- Maintenance Reporting Section -->
+            <div class="maintenance-box glass-card full-span">
+              <h4>🛠️ Maintenance & Repair Requests</h4>
+              <p class="sub">Report issues directly to your landlord and track technician dispatch.</p>
+
+              <div class="report-form-row">
+                <input 
+                  type="text" 
+                  placeholder="Describe the issue (e.g. Water heater sensor check, AC repair)" 
+                  [ngModel]="newMaintIssue()" 
+                  (ngModelChange)="newMaintIssue.set($event)"
+                />
+                <select [ngModel]="newMaintUrgency()" (ngModelChange)="newMaintUrgency.set($event)">
+                  <option value="Low">Low Urgency</option>
+                  <option value="Medium">Medium Urgency</option>
+                  <option value="High">High Urgency</option>
+                  <option value="Emergency">🚨 Emergency</option>
+                </select>
+                <button class="btn btn-teal-solid" (click)="submitMaintenanceTicket()">
+                  Submit Ticket
+                </button>
+              </div>
+
+              <div class="tickets-grid">
+                <div *ngFor="let t of maintenanceTickets()" class="ticket-row glass-card">
+                  <div class="ticket-info">
+                    <span class="urgency-tag" [ngClass]="'urgency-' + t.urgency.toLowerCase()">{{ t.urgency }} Urgency</span>
+                    <strong>{{ t.issue }}</strong>
+                    <span class="tech-txt">Technician: {{ t.technician }}</span>
+                  </div>
+                  <span class="status-pill blue">{{ t.status }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 1E. Messages Tab -->
+        <div class="content-panel" *ngIf="tenantNavTab() === 'messages'">
+          <div class="panel-header-row">
+            <div>
+              <h3>💬 Direct Chat with Landlord</h3>
+              <p class="panel-desc">Real-time encrypted communication channel.</p>
+            </div>
+          </div>
+
+          <div class="chat-container glass-card">
+            <div class="chat-messages-box">
+              <div *ngFor="let m of messages()" class="chat-bubble" [ngClass]="'bubble-' + m.role">
+                <div class="sender-name">{{ m.sender }}</div>
+                <div class="msg-text">{{ m.text }}</div>
+                <div class="msg-time">{{ m.timestamp }}</div>
+              </div>
+            </div>
+
+            <div class="chat-input-bar">
+              <input 
+                type="text" 
+                placeholder="Type message to landlord..." 
+                [ngModel]="newMessageText()" 
+                (ngModelChange)="newMessageText.set($event)"
+                (keyup.enter)="sendMessage('tenant')"
+              />
+              <button class="btn btn-teal-solid" (click)="sendMessage('tenant')">Send Message →</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </ng-container>
+
+  <!-- ========================================================================= -->
+  <!-- 2. OWNER / LANDLORD DASHBOARD ACCESS & PERMISSION GATES                   -->
+  <!-- ========================================================================= -->
+  <ng-container *ngIf="portalMode() === 'owner'">
+    
+    <!-- Gate 2A: Not Logged In (Guest) -->
+    <div *ngIf="!authService.isLoggedIn()" class="access-restricted-card glass-card">
+      <div class="lock-icon-box owner-lock">🟣</div>
+      <h2>Property Owner Sign In Required</h2>
+      <p class="lock-desc">
+        You must be signed in with a <strong>Property Owner / Landlord Account</strong> to list properties, screen applicants, and issue rental contracts.
+      </p>
+      <div class="lock-actions">
+        <button class="btn btn-teal-solid" (click)="openLoginModal('owner')">
+          Sign In as Property Owner →
+        </button>
+      </div>
+    </div>
+
+    <!-- Gate 2B: Logged in as Tenant (Wrong Role) -->
+    <div *ngIf="authService.isLoggedIn() && authService.isTenant()" class="access-restricted-card glass-card">
+      <div class="lock-icon-box owner-lock">🔒</div>
+      <h2>Owner Portal Restricted to Landlords</h2>
+      <p class="lock-desc">
+        You are currently signed in as a <strong>Tenant ({{ authService.currentUser()?.name }})</strong>.
+        Only registered Property Owners have permission to list new properties, screen applicant dossiers, and approve leases.
+      </p>
+      <div class="lock-actions">
+        <button class="btn btn-teal-solid" (click)="authService.logout()">
+          Sign Out to Sign In as Owner
+        </button>
+      </div>
+    </div>
+
+    <!-- Gate 2C: Authorized Owner User View -->
+    <div *ngIf="authService.isLoggedIn() && authService.isOwner()" class="authorized-portal-view">
+      
+      <!-- Owner Dashboard Header -->
+      <div class="portal-header glass-card">
+        <div class="portal-title-row">
+          <div>
+            <span class="portal-badge badge-owner">🟣 PROPERTY OWNER / LANDLORD DASHBOARD</span>
+            <h2>Welcome back, {{ authService.currentUser()?.name }}</h2>
+            <p class="subtitle">
+              List new rental properties, review applicant dossiers, issue rental contracts, and track payments.
+            </p>
+          </div>
+        </div>
+
+        <!-- Owner Navigation Sub-Tabs -->
+        <div class="sub-nav-tabs">
+          <button 
+            class="tab-link" 
+            [class.active]="ownerNavTab() === 'add-property'"
+            (click)="ownerNavTab.set('add-property')"
+          >
+            🏗️ Add Property
+          </button>
+          <button 
+            class="tab-link" 
+            [class.active]="ownerNavTab() === 'applications'"
+            (click)="ownerNavTab.set('applications')"
+          >
+            📥 Review Applicants ({{ applications().length }})
+          </button>
+          <button 
+            class="tab-link" 
+            [class.active]="ownerNavTab() === 'contracts-payments'"
+            (click)="ownerNavTab.set('contracts-payments')"
+          >
+            📜 Rental Contracts & Payments
+          </button>
+          <button 
+            class="tab-link" 
+            [class.active]="ownerNavTab() === 'maintenance'"
+            (click)="ownerNavTab.set('maintenance')"
+          >
+            🛠️ Maintenance Desk ({{ maintenanceTickets().length }})
+          </button>
+          <button 
+            class="tab-link" 
+            [class.active]="ownerNavTab() === 'messages'"
+            (click)="ownerNavTab.set('messages')"
+          >
+            💬 Landlord Chat ({{ messages().length }})
+          </button>
+        </div>
+      </div>
+
+      <!-- Owner Content Panels -->
+      <div class="portal-content">
+        
+        <!-- 2A. Add Property Tab -->
+        <div class="content-panel" *ngIf="ownerNavTab() === 'add-property'">
+          <div class="panel-header-row">
+            <div>
+              <h3>🏗️ Add & Publish New Rental Property</h3>
+              <p class="panel-desc">Fill in property information, upload photos, and save your listing to the live catalog.</p>
+            </div>
+          </div>
+
+          <!-- Success Alert Banner -->
+          <div *ngIf="publishSuccess()" class="publish-alert-banner alert-success">
+            <div class="alert-icon-circle">🎉</div>
+            <div class="alert-text-body">
+              <strong>Property Saved Successfully!</strong>
+              <p>{{ publishSuccessMessage() }}</p>
+            </div>
+            <button type="button" class="alert-close-btn" (click)="publishSuccess.set(false)">✕</button>
+          </div>
+
+          <!-- Error Alert Banner -->
+          <div *ngIf="publishError()" class="publish-alert-banner alert-error">
+            <div class="alert-icon-circle">⚠️</div>
+            <div class="alert-text-body">
+              <strong>Save Property Failed</strong>
+              <p>{{ publishError() }}</p>
+            </div>
+            <button type="button" class="alert-close-btn" (click)="publishError.set(null)">✕</button>
+          </div>
+
+          <div class="add-property-form glass-card">
+            <h4>1. Property Information</h4>
+            <div class="form-grid-2">
+              <div class="form-group">
+                <label>Property Type <span class="required-star">*</span></label>
+                <select [ngModel]="newPropType()" (ngModelChange)="newPropType.set($event)">
+                  <option value="Apartment">Apartment</option>
+                  <option value="Condo">Condo</option>
+                  <option value="Villa">Villa</option>
+                  <option value="Studio">Studio</option>
+                  <option value="Townhouse">Townhouse</option>
+                </select>
+              </div>
+
+              <div class="form-group" [class.has-error]="hasSubmittedAddProperty() && !newPropTitle().trim()">
+                <label>Property Title <span class="required-star">*</span></label>
+                <input 
+                  type="text" 
+                  placeholder="e.g. BKK1 Luxury Serviced Sky Suite" 
+                  [ngModel]="newPropTitle()" 
+                  (ngModelChange)="newPropTitle.set($event)" 
+                />
+                <span *ngIf="hasSubmittedAddProperty() && !newPropTitle().trim()" class="field-error-text">
+                  ⚠️ Property title is required
+                </span>
+              </div>
+
+              <div class="form-group" [class.has-error]="hasSubmittedAddProperty() && !newPropLocation().trim()">
+                <label>Address / Location <span class="required-star">*</span></label>
+                <input 
+                  type="text" 
+                  placeholder="e.g. BKK1, Phnom Penh, Cambodia" 
+                  [ngModel]="newPropLocation()" 
+                  (ngModelChange)="newPropLocation.set($event)" 
+                />
+                <span *ngIf="hasSubmittedAddProperty() && !newPropLocation().trim()" class="field-error-text">
+                  ⚠️ Address / location is required
+                </span>
+              </div>
+
+              <div class="form-group" [class.has-error]="hasSubmittedAddProperty() && (!newPropPrice() || newPropPrice()! <= 0)">
+                <label>Monthly Rent ($ USD) <span class="required-star">*</span></label>
+                <input 
+                  type="number" 
+                  placeholder="1500" 
+                  [ngModel]="newPropPrice()" 
+                  (ngModelChange)="newPropPrice.set($event)" 
+                />
+                <span *ngIf="hasSubmittedAddProperty() && (!newPropPrice() || newPropPrice()! <= 0)" class="field-error-text">
+                  ⚠️ Valid monthly rent amount is required
+                </span>
+              </div>
+
+              <div class="form-group">
+                <label>Bedrooms</label>
+                <input type="number" placeholder="e.g. 2" [ngModel]="newPropBeds()" (ngModelChange)="newPropBeds.set($event)" />
+              </div>
+
+              <div class="form-group">
+                <label>Bathrooms</label>
+                <input type="number" placeholder="e.g. 2" [ngModel]="newPropBaths()" (ngModelChange)="newPropBaths.set($event)" />
+              </div>
+
+              <div class="form-group">
+                <label>Floor Area (SqFt)</label>
+                <input type="number" placeholder="e.g. 1150" [ngModel]="newPropSqft()" (ngModelChange)="newPropSqft.set($event)" />
+              </div>
+
+              <div class="form-group">
+                <label>Security Deposit ($ USD)</label>
+                <input type="number" placeholder="e.g. 1500" [ngModel]="newPropDeposit()" (ngModelChange)="newPropDeposit.set($event)" />
+              </div>
+            </div>
+
+            <h4>2. Upload Photos & Amenities</h4>
+            
+            <!-- Photo Upload Zone (File Upload instead of URL input) -->
+            <div class="form-group" [class.has-error]="hasSubmittedAddProperty() && !newPropImage()">
+              <label>Property Photo <span class="required-star">*</span></label>
+              
+              <!-- Hidden Native File Input -->
+              <input 
+                type="file" 
+                #photoFileInput 
+                (change)="onPhotoFileSelected($event)" 
+                accept="image/*" 
+                style="display: none;" 
+              />
+
+              <!-- Uploaded Photo Preview -->
+              <div *ngIf="newPropImage()" class="photo-upload-preview-card">
+                <img [src]="newPropImage()" alt="Property Preview" class="uploaded-img-preview" />
+                <div class="photo-preview-overlay">
+                  <div class="photo-preview-actions">
+                    <button type="button" class="btn btn-sm btn-outline" (click)="photoFileInput.click()">
+                      🔄 Change Photo
+                    </button>
+                    <button type="button" class="btn btn-sm btn-reject" (click)="removeUploadedPhoto()">
+                      ✕ Remove
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Drag and Drop / Click Upload Box -->
+              <div 
+                *ngIf="!newPropImage()" 
+                class="photo-dropzone-box" 
+                [class.dropzone-error]="hasSubmittedAddProperty() && !newPropImage()"
+                (click)="photoFileInput.click()"
+              >
+                <div class="dropzone-icon">📸</div>
+                <div class="dropzone-text">
+                  <strong>Click to Upload Property Photo</strong>
+                  <p>Supports high-resolution PNG, JPG, JPEG, and WebP images</p>
+                </div>
+                <button type="button" class="btn btn-sm btn-teal-solid">
+                  Browse Files
+                </button>
+              </div>
+
+              <span *ngIf="hasSubmittedAddProperty() && !newPropImage()" class="field-error-text">
+                ⚠️ Please upload a property photo
+              </span>
+            </div>
+
+            <div class="form-group">
+              <label>Amenities (Comma-separated)</label>
+              <input type="text" placeholder="e.g. WiFi, Pool, Gym, Balcony, Security" [ngModel]="newPropAmenities()" (ngModelChange)="newPropAmenities.set($event)" />
+            </div>
+
+            <div class="form-group">
+              <label>Description</label>
+              <textarea rows="3" placeholder="Describe key highlights, furnishing status, and nearby landmarks..." [ngModel]="newPropDescription()" (ngModelChange)="newPropDescription.set($event)"></textarea>
+            </div>
+
+            <!-- Submit Button (Save Property) -->
+            <button class="btn btn-lg btn-teal-solid btn-save-property" (click)="publishProperty()" [disabled]="isPublishing()">
+              {{ isPublishing() ? 'Saving Property to Database...' : '💾 Save Property' }}
+            </button>
+          </div>
+        </div>
+
+        <!-- 2B. Receive Applications & Review Applicants (Approve / Reject) -->
+        <div class="content-panel" *ngIf="ownerNavTab() === 'applications'">
+          <div class="panel-header-row">
+            <div>
+              <h3>📥 Receive & Review Tenant Applications</h3>
+              <p class="panel-desc">Inspect applicant dossiers (FICO credit score, salary ratio, documents) and decide.</p>
+            </div>
+          </div>
+
+          <div class="owner-apps-grid">
+            <div *ngFor="let app of applications()" class="applicant-review-card glass-card">
+              <div class="applicant-header">
+                <div>
+                  <h4>{{ app.tenantName }}</h4>
+                  <span class="app-prop">Applying for: <strong>{{ app.propertyTitle }}</strong></span>
+                </div>
+                <span class="status-pill" [ngClass]="app.status === 'Approved' ? 'green' : (app.status === 'Rejected' ? 'red' : 'yellow')">
+                  {{ app.status }}
+                </span>
+              </div>
+
+              <div class="dossier-stats-row">
+                <div class="stat-box">
+                  <span class="stat-lbl">Credit Score</span>
+                  <strong class="stat-val teal">{{ app.creditScore }} (FICO)</strong>
+                </div>
+                <div class="stat-box">
+                  <span class="stat-lbl">Verified Income</span>
+                  <strong class="stat-val">{{ app.annualIncome }}</strong>
+                </div>
+                <div class="stat-box">
+                  <span class="stat-lbl">Employment</span>
+                  <strong class="stat-val">{{ app.employment }}</strong>
+                </div>
+              </div>
+
+              <div class="applicant-docs">
+                <label>Verified Attachments:</label>
+                <div class="docs-chips">
+                  <span *ngFor="let doc of app.documents">✓ {{ doc }}</span>
+                </div>
+              </div>
+
+              <div class="applicant-note" *ngIf="app.message">
+                <label>Tenant Note:</label>
+                <p>“{{ app.message }}”</p>
+              </div>
+
+              <!-- Interactive Sliding Decision Controller -->
+              <div class="decision-controller">
+                <div class="decision-controller-header">
+                  <label class="decision-label">Application Decision Gate:</label>
+                  <span class="decision-sub-hint">Slide or click to decide</span>
+                </div>
+
+                <!-- 3-Segment Sliding Track -->
+                <div class="slide-decision-track" [ngClass]="'state-' + app.status.toLowerCase()">
+                  <!-- Reject Sliding Segment -->
+                  <button 
+                    type="button"
+                    class="slide-segment btn-slide-reject" 
+                    [class.active]="app.status === 'Rejected'"
+                    (click)="handleApplicationDecision(app, 'Rejected')"
+                    title="Reject applicant"
+                  >
+                    <span class="slide-icon">✕</span>
+                    <span class="slide-text">Reject Application</span>
+                  </button>
+
+                  <!-- Pending Status Segment -->
+                  <div class="slide-segment segment-pending" *ngIf="app.status === 'Pending'">
+                    <span class="slide-pulse-dot"></span>
+                    <span class="slide-text">Under Review</span>
+                  </div>
+
+                  <!-- Approve Sliding Segment -->
+                  <button 
+                    type="button"
+                    class="slide-segment btn-slide-approve" 
+                    [class.active]="app.status === 'Approved'"
+                    (click)="handleApplicationDecision(app, 'Approved')"
+                    title="Approve applicant & issue contract"
+                  >
+                    <span class="slide-icon">✓</span>
+                    <span class="slide-text">Approve & Issue Lease</span>
+                    <span class="slide-arrow">→</span>
+                  </button>
+                </div>
+
+                <!-- Animated Decision Feedback Banners -->
+                <div *ngIf="app.status === 'Approved'" class="decision-feedback-banner feedback-approved">
+                  <span>🎉 <strong>Application Approved!</strong> Digital lease contract generated.</span>
+                  <button class="btn btn-sm btn-outline" (click)="ownerNavTab.set('contracts-payments')">
+                    View Contract & Payments →
+                  </button>
+                </div>
+
+                <div *ngIf="app.status === 'Rejected'" class="decision-feedback-banner feedback-rejected">
+                  <span>✕ <strong>Application Declined.</strong> Notice sent to applicant.</span>
+                  <button class="btn btn-sm btn-ghost" (click)="handleApplicationDecision(app, 'Pending')">
+                    ↩ Undo Decision
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2C. Rental Contracts & Payment Tracking -->
+        <div class="content-panel" *ngIf="ownerNavTab() === 'contracts-payments'">
+          <div class="panel-header-row">
+            <div>
+              <h3>📜 Rental Contracts & Payment Tracking</h3>
+              <p class="panel-desc">Monitor legally binding lease contracts, rent deposits, and escrow balances.</p>
+            </div>
+          </div>
+
+          <div class="contracts-grid">
+            <div class="contract-card glass-card">
+              <div class="contract-top">
+                <span class="status-pill green">Binding Active Lease</span>
+                <h4>Residential Lease: Skyline Luxury Penthouse</h4>
+              </div>
+
+              <div class="contract-details">
+                <div class="c-row"><span>Tenant:</span> <strong>Sophie Taylor</strong></div>
+                <div class="c-row"><span>Term:</span> <strong>12 Months (Sept 2026 - Aug 2027)</strong></div>
+                <div class="c-row"><span>Monthly Rent:</span> <strong>$3,800.00</strong></div>
+                <div class="c-row"><span>Security Deposit in Escrow:</span> <strong>$3,800.00 (Protected)</strong></div>
+              </div>
+
+              <div class="payment-tracking-table">
+                <label>Payment Tracking Ledger:</label>
+                <div class="p-row">
+                  <span>Deposit (Escrow)</span>
+                  <strong>$3,800.00</strong>
+                  <span class="status-pill green">Collected</span>
+                </div>
+                <div class="p-row">
+                  <span>Sept 2026 Rent</span>
+                  <strong>$3,800.00</strong>
+                  <span class="status-pill green">Paid in Full</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2D. Maintenance Management -->
+        <div class="content-panel" *ngIf="ownerNavTab() === 'maintenance'">
+          <div class="panel-header-row">
+            <div>
+              <h3>🛠️ Maintenance Management & Technician Dispatch</h3>
+              <p class="panel-desc">Assign certified technicians to tenant repair tickets.</p>
+            </div>
+          </div>
+
+          <div class="tickets-grid">
+            <div *ngFor="let t of maintenanceTickets()" class="ticket-row glass-card">
+              <div class="ticket-info">
+                <span class="urgency-tag" [ngClass]="'urgency-' + t.urgency.toLowerCase()">{{ t.urgency }} Urgency</span>
+                <strong>{{ t.issue }}</strong>
+                <span class="tech-txt">Assigned Technician: <strong>{{ t.technician }}</strong></span>
+              </div>
+              <span class="status-pill blue">{{ t.status }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2E. Landlord Chat Messages -->
+        <div class="content-panel" *ngIf="ownerNavTab() === 'messages'">
+          <div class="panel-header-row">
+            <div>
+              <h3>💬 Landlord Direct Messages</h3>
+              <p class="panel-desc">Communicate directly with active and prospective tenants.</p>
+            </div>
+          </div>
+
+          <div class="chat-container glass-card">
+            <div class="chat-messages-box">
+              <div *ngFor="let m of messages()" class="chat-bubble" [ngClass]="'bubble-' + m.role">
+                <div class="sender-name">{{ m.sender }}</div>
+                <div class="msg-text">{{ m.text }}</div>
+                <div class="msg-time">{{ m.timestamp }}</div>
+              </div>
+            </div>
+
+            <div class="chat-input-bar">
+              <input 
+                type="text" 
+                placeholder="Type message to tenant..." 
+                [ngModel]="newMessageText()" 
+                (ngModelChange)="newMessageText.set($event)"
+                (keyup.enter)="sendMessage('owner')"
+              />
+              <button class="btn btn-teal-solid" (click)="sendMessage('owner')">Send Message →</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </ng-container>
+
+</div>
