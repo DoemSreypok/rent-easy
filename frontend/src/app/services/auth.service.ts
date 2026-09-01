@@ -2,22 +2,11 @@ import { Injectable, signal, computed, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, tap } from 'rxjs';
 import { environment } from '../../environments/environment';
-
-export interface User {
-  id?: string;
-  _id?: string;
-  name: string;
-  email: string;
-  role: 'tenant' | 'owner' | 'admin';
-  phone?: string;
-  avatar?: string;
-  employment?: string;
-  annualIncome?: string;
-  creditScore?: number;
-}
+import { User } from '../models/flowchart.model';
 
 export interface AuthResponse {
-  status: string;
+  success?: boolean;
+  status?: string;
   message?: string;
   data: {
     user: User;
@@ -36,12 +25,28 @@ export class AuthService {
   token = signal<string | null>(null);
 
   isLoggedIn = computed(() => !!this.currentUser());
-  isTenant = computed(() => this.currentUser()?.role === 'tenant');
-  isOwner = computed(() => this.currentUser()?.role === 'owner');
-  userRole = computed(() => this.currentUser()?.role || 'guest');
+  userRole = computed(() => (this.currentUser()?.role || 'GUEST').toUpperCase());
 
-  canAccessOwnerFeatures = computed(() => this.isOwner());
-  canAccessTenantFeatures = computed(() => this.isTenant());
+  isAdmin = computed(() => {
+    const r = this.userRole();
+    return r === 'ADMIN';
+  });
+
+  isLandlord = computed(() => {
+    const r = this.userRole();
+    return r === 'LANDLORD' || r === 'OWNER';
+  });
+
+  isOwner = computed(() => this.isLandlord());
+
+  isTenant = computed(() => {
+    const r = this.userRole();
+    return r === 'TENANT';
+  });
+
+  canAccessOwnerFeatures = computed(() => this.isLandlord() || this.isAdmin());
+  canAccessTenantFeatures = computed(() => this.isTenant() || this.isAdmin());
+  canAccessAdminFeatures = computed(() => this.isAdmin());
 
   constructor() {
     this.restoreSession();
@@ -52,7 +57,8 @@ export class AuthService {
     const savedToken = localStorage.getItem('renteasy_token');
     if (savedUser && savedToken) {
       try {
-        this.currentUser.set(JSON.parse(savedUser));
+        const user = JSON.parse(savedUser);
+        this.currentUser.set(user);
         this.token.set(savedToken);
       } catch {
         this.logout();
@@ -61,17 +67,27 @@ export class AuthService {
   }
 
   register(payload: {
-    name: string;
+    fullName?: string;
+    name?: string;
     email: string;
-    password: string;
-    role: 'tenant' | 'owner';
     phone?: string;
+    password: string;
+    confirmPassword?: string;
+    role: 'ADMIN' | 'LANDLORD' | 'TENANT' | 'owner' | 'tenant' | string;
     employment?: string;
     annualIncome?: string;
   }): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(`${this.apiUrl}/auth/register`, payload).pipe(
+    const body = {
+      ...payload,
+      fullName: payload.fullName || payload.name,
+      name: payload.name || payload.fullName,
+      role: (payload.role || 'TENANT').toUpperCase() === 'OWNER' ? 'LANDLORD' : (payload.role || 'TENANT').toUpperCase()
+    };
+    return this.http.post<AuthResponse>(`${this.apiUrl}/auth/register`, body).pipe(
       tap((res) => {
-        this.handleAuthSuccess(res.data.user, res.data.token);
+        if (res?.data?.user && res?.data?.token) {
+          this.handleAuthSuccess(res.data.user, res.data.token);
+        }
       })
     );
   }
@@ -79,15 +95,42 @@ export class AuthService {
   login(email: string, password: string): Observable<AuthResponse> {
     return this.http.post<AuthResponse>(`${this.apiUrl}/auth/login`, { email, password }).pipe(
       tap((res) => {
-        this.handleAuthSuccess(res.data.user, res.data.token);
+        if (res?.data?.user && res?.data?.token) {
+          this.handleAuthSuccess(res.data.user, res.data.token);
+        }
       })
     );
   }
 
-  quickLoginAs(role: 'tenant' | 'owner'): Observable<AuthResponse> {
-    const email = role === 'tenant' ? 'pinky@renteasy.com' : 'lyden@renteasy.com';
-    const password = 'password123';
+  quickLoginAs(role: 'ADMIN' | 'LANDLORD' | 'TENANT' | 'owner' | 'tenant' | 'admin'): Observable<AuthResponse> {
+    const r = role.toUpperCase();
+    let email = 'tenant@renteasy.com';
+    let password = 'Tenant123!';
+
+    if (r === 'ADMIN') {
+      email = 'admin@renteasy.com';
+      password = 'Admin123!';
+    } else if (r === 'LANDLORD' || r === 'OWNER') {
+      email = 'landlord@renteasy.com';
+      password = 'Landlord123!';
+    } else if (r === 'TENANT') {
+      email = 'tenant@renteasy.com';
+      password = 'Tenant123!';
+    }
+
     return this.login(email, password);
+  }
+
+  forgotPassword(email: string): Observable<any> {
+    return this.http.post(`${this.apiUrl}/auth/forgot-password`, { email });
+  }
+
+  resetPassword(token: string, newPassword: string): Observable<any> {
+    return this.http.post(`${this.apiUrl}/auth/reset-password`, { token, newPassword });
+  }
+
+  changePassword(currentPassword: string, newPassword: string): Observable<any> {
+    return this.http.post(`${this.apiUrl}/auth/change-password`, { currentPassword, newPassword });
   }
 
   logout(): void {
@@ -97,7 +140,7 @@ export class AuthService {
     localStorage.removeItem('renteasy_token');
   }
 
-  private handleAuthSuccess(user: User, token: string): void {
+  handleAuthSuccess(user: User, token: string): void {
     this.currentUser.set(user);
     this.token.set(token);
     localStorage.setItem('renteasy_user', JSON.stringify(user));

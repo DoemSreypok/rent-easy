@@ -99,70 +99,6 @@
     </div>
   </section>
 
-  <!-- 2. Two User Types & Permissions Callout -->
-  <section class="roles-permissions-section" id="roles-section">
-    <div class="section-container">
-      <div class="section-header">
-        <span class="role-section-pill">👥 TWO DEDICATED USER ROLES</span>
-        <h2>Choose Your Account Type & Permissions</h2>
-        <p>RentEasy provides tailored workflows and security permissions for both renters and property managers.</p>
-      </div>
-
-      <div class="role-cards-comparison">
-        <!-- Role 1: Tenant -->
-        <div class="role-box role-box-tenant">
-          <div class="role-box-header">
-            <span class="role-box-icon">🟢</span>
-            <div>
-              <h3>Tenant Account</h3>
-              <span class="role-box-tag">For Renters & Home Seekers</span>
-            </div>
-          </div>
-          <ul class="role-permissions-list">
-            <li><span class="check-icon">✓</span> <strong>Browse & Search:</strong> Unlimited filterable property listings</li>
-            <li><span class="check-icon">✓</span> <strong>Saved Homes:</strong> Bookmark favorite apartments & condos</li>
-            <li><span class="check-icon">✓</span> <strong>Schedule Viewings:</strong> Book in-person and video tours</li>
-            <li><span class="check-icon">✓</span> <strong>Apply Online:</strong> Verified digital rental application dossiers</li>
-            <li><span class="check-icon">✓</span> <strong>My Rental Hub:</strong> E-sign lease, online rent escrow & maintenance</li>
-          </ul>
-          <div class="role-box-actions">
-            <button class="btn btn-tenant-signup flex-1" (click)="onRequestAuth.emit({ defaultMode: 'register', defaultRole: 'tenant' })">
-              🟢 Create Tenant Account
-            </button>
-            <button class="btn btn-ghost" (click)="onRequestAuth.emit({ defaultMode: 'login', defaultRole: 'tenant' })">
-              Tenant Sign In
-            </button>
-          </div>
-        </div>
-
-        <!-- Role 2: Property Owner -->
-        <div class="role-box role-box-owner">
-          <div class="role-box-header">
-            <span class="role-box-icon">🟣</span>
-            <div>
-              <h3>Property Owner Account</h3>
-              <span class="role-box-tag">For Landlords & Property Managers</span>
-            </div>
-          </div>
-          <ul class="role-permissions-list">
-            <li><span class="check-icon">✓</span> <strong>List & Publish:</strong> 10-step property wizard published live to MongoDB</li>
-            <li><span class="check-icon">✓</span> <strong>Screen Applicants:</strong> Inspect FICO credit scores, income & paystubs</li>
-            <li><span class="check-icon">✓</span> <strong>Approve / Reject:</strong> 1-click decision gate generating legal lease</li>
-            <li><span class="check-icon">✓</span> <strong>Rental Contracts:</strong> Track binding leases & payment escrow ledger</li>
-            <li><span class="check-icon">✓</span> <strong>Maintenance Desk:</strong> Assign certified repair technicians in real-time</li>
-          </ul>
-          <div class="role-box-actions">
-            <button class="btn btn-owner-signup flex-1" (click)="onRequestAuth.emit({ defaultMode: 'register', defaultRole: 'owner' })">
-              🟣 Create Landlord Account
-            </button>
-            <button class="btn btn-ghost" (click)="onRequestAuth.emit({ defaultMode: 'login', defaultRole: 'owner' })">
-              Landlord Sign In
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
 
   <!-- 3. Property Categories -->
   <section class="categories-section">
@@ -226,18 +162,24 @@
       <div class="properties-grid" *ngIf="!isLoading()">
         <div *ngFor="let prop of properties()" class="prop-card" (click)="openPropertyDetails(prop)">
           <div class="prop-image-wrap">
-            <img [src]="prop.image" [alt]="prop.title" loading="lazy" />
+            <img 
+              [src]="prop.image || (prop.images && prop.images[0]) || 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=800&q=80'" 
+              [alt]="prop.title" 
+              loading="lazy" 
+            />
             <span class="prop-type-badge">{{ prop.type }}</span>
             <span class="prop-verified-badge">✓ Verified</span>
             
             <!-- Favorite Heart Button -->
             <button 
+              type="button"
               class="favorite-heart-btn" 
               [class.favorited]="isFavorited(prop)"
               (click)="toggleFavorite(prop, $event)"
-              title="Save to favorites"
+              [title]="isFavorited(prop) ? 'Saved in your Favorites ❤️ (Click to remove)' : 'Save to Favorites'"
+              [attr.aria-label]="isFavorited(prop) ? 'Remove from favorites' : 'Add to favorites'"
             >
-              {{ isFavorited(prop) ? '❤️' : '🤍' }}
+              <span class="heart-icon">{{ isFavorited(prop) ? '❤️' : '🤍' }}</span>
             </button>
           </div>
 
@@ -266,8 +208,14 @@
             </div>
 
             <div class="prop-actions" (click)="$event.stopPropagation()">
-              <button class="btn btn-sm btn-outline" (click)="openPropertyDetails(prop)">
-                View Details
+              <button 
+                type="button" 
+                class="btn btn-sm btn-outline btn-save-quick"
+                [class.favorited]="isFavorited(prop)"
+                (click)="toggleFavorite(prop, $event)"
+                [title]="isFavorited(prop) ? 'Saved in Favorites (Click to remove)' : 'Save to Favorites'"
+              >
+                {{ isFavorited(prop) ? '❤️ Saved' : '🤍 Save' }}
               </button>
               <button class="btn btn-sm btn-tenant" (click)="openPropertyDetails(prop)">
                 Inspect & Action →
@@ -405,7 +353,10 @@
       <div class="details-grid-modal">
         <!-- Left: Photo Gallery with Floating Heart Button Overlay -->
         <div class="details-gallery-modal">
-          <img [src]="activeProperty()!.image" [alt]="activeProperty()!.title" />
+          <img 
+            [src]="activeProperty()?.image || (activeProperty()?.images && activeProperty()!.images![0]) || 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=1200&q=80'" 
+            [alt]="activeProperty()?.title" 
+          />
           
           <!-- Floating Heart Button on Picture (Only Icon) -->
           <button 
@@ -461,9 +412,9 @@
           <div class="landlord-info-card">
             <div class="avatar-circle">👤</div>
             <div>
-              <strong>{{ activeProperty()!.owner.name }}</strong>
+              <strong>{{ activeProperty()?.owner?.name || 'Alexander Sterling (Verified Landlord)' }}</strong>
               <div class="landlord-meta">
-                <span>{{ activeProperty()!.owner.trustScore }}</span> • Response Time: {{ activeProperty()!.owner.responseRate }}
+                <span>{{ activeProperty()?.owner?.trustScore || '100% SuperHost' }}</span> • Response Time: {{ activeProperty()?.owner?.responseRate || '10 mins' }}
               </div>
             </div>
           </div>

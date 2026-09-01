@@ -1,10 +1,16 @@
 import mongoose from 'mongoose';
+import bcrypt from 'bcryptjs';
 
 const userSchema = new mongoose.Schema(
   {
-    name: {
+    fullName: {
       type: String,
       required: [true, 'Full name is required'],
+      trim: true
+    },
+    // Backwards compatibility alias for name
+    name: {
+      type: String,
       trim: true
     },
     email: {
@@ -12,42 +18,84 @@ const userSchema = new mongoose.Schema(
       required: [true, 'Email is required'],
       unique: true,
       lowercase: true,
+      trim: true,
+      index: true
+    },
+    phone: {
+      type: String,
       trim: true
     },
     password: {
       type: String,
       required: [true, 'Password is required'],
-      minlength: 6
+      minlength: [6, 'Password must be at least 6 characters']
     },
     role: {
       type: String,
-      enum: ['tenant', 'owner', 'admin'],
-      default: 'tenant'
+      enum: ['ADMIN', 'LANDLORD', 'TENANT'],
+      default: 'TENANT',
+      index: true
     },
-    phone: {
+    status: {
       type: String,
-      default: ''
+      enum: ['ACTIVE', 'INACTIVE'],
+      default: 'ACTIVE',
+      index: true
     },
     avatar: {
       type: String,
-      default: ''
+      default: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80'
     },
     employment: {
       type: String,
-      default: ''
+      trim: true
     },
     annualIncome: {
       type: String,
-      default: ''
+      trim: true
     },
     creditScore: {
       type: Number,
       default: 750
-    }
+    },
+    resetPasswordToken: String,
+    resetPasswordExpires: Date
   },
   {
     timestamps: true
   }
 );
+
+// Hash password before saving if modified
+userSchema.pre('save', async function (next) {
+  if (this.fullName && !this.name) {
+    this.name = this.fullName;
+  }
+  if (this.name && !this.fullName) {
+    this.fullName = this.name;
+  }
+  if (!this.isModified('password')) return next();
+  try {
+    const salt = await bcrypt.genSalt(10);
+    this.password = await bcrypt.hash(this.password, salt);
+    next();
+  } catch (err) {
+    next(err);
+  }
+});
+
+// Compare password helper
+userSchema.methods.comparePassword = async function (enteredPassword) {
+  return await bcrypt.compare(enteredPassword, this.password);
+};
+
+// Exclude password from JSON output
+userSchema.methods.toJSON = function () {
+  const obj = this.toObject();
+  delete obj.password;
+  delete obj.resetPasswordToken;
+  delete obj.resetPasswordExpires;
+  return obj;
+};
 
 export const User = mongoose.model('User', userSchema);

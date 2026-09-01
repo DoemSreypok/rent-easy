@@ -10,11 +10,15 @@
         <span class="logo-emoji">🏠</span>
         <span class="brand-title">RentEasy</span>
       </div>
-      <h2>{{ mode() === 'login' ? 'Welcome Back' : 'Create Your Account' }}</h2>
+      <h2>
+        {{ mode() === 'login' ? 'Welcome Back' : (mode() === 'register' ? 'Create Your Account' : 'Reset Password') }}
+      </h2>
       <p class="subtitle">
         {{ mode() === 'login' 
-          ? 'Sign in to access your rentals, applications, and properties' 
-          : 'Join thousands of verified tenants and premier property owners' }}
+          ? 'Sign in to access your rentals, tenant dashboard, or landlord portal' 
+          : (mode() === 'register' 
+            ? 'Join verified tenants, landlords, and property administrators' 
+            : 'Enter your registered email to receive reset instructions') }}
       </p>
     </div>
 
@@ -34,33 +38,52 @@
       >
         Register
       </button>
+      <button 
+        class="tab-btn" 
+        [class.active]="mode() === 'forgot'" 
+        (click)="setMode('forgot')"
+      >
+        Forgot Password
+      </button>
     </div>
 
     <!-- Role Selection (Only on Register) -->
     <div class="role-selector" *ngIf="mode() === 'register'">
-      <label class="section-label">Select Your Account Type:</label>
+      <label class="section-label">Select Your Role:</label>
       <div class="role-options">
         <div 
           class="role-card role-tenant" 
-          [class.selected]="role() === 'tenant'"
-          (click)="role.set('tenant')"
+          [class.selected]="role() === 'TENANT'"
+          (click)="role.set('TENANT')"
         >
           <span class="role-icon">🟢</span>
           <div>
-            <strong>I am a Tenant</strong>
-            <small>Browse, book viewings & rent properties</small>
+            <strong>Tenant</strong>
+            <small>Search, request & pay rent</small>
           </div>
         </div>
 
         <div 
           class="role-card role-owner" 
-          [class.selected]="role() === 'owner'"
-          (click)="role.set('owner')"
+          [class.selected]="role() === 'LANDLORD'"
+          (click)="role.set('LANDLORD')"
         >
           <span class="role-icon">🟣</span>
           <div>
-            <strong>I am a Property Owner</strong>
-            <small>List rentals, screen applicants & collect rent</small>
+            <strong>Landlord</strong>
+            <small>Listings, rooms & contracts</small>
+          </div>
+        </div>
+
+        <div 
+          class="role-card role-admin" 
+          [class.selected]="role() === 'ADMIN'"
+          (click)="role.set('ADMIN')"
+        >
+          <span class="role-icon">👑</span>
+          <div>
+            <strong>Admin</strong>
+            <small>Platform command & approvals</small>
           </div>
         </div>
       </div>
@@ -69,6 +92,11 @@
     <!-- Error Banner -->
     <div *ngIf="errorMessage()" class="error-banner">
       ⚠️ <span>{{ errorMessage() }}</span>
+    </div>
+
+    <!-- Success Info Banner -->
+    <div *ngIf="successInfoMessage()" class="success-banner">
+      ✓ <span>{{ successInfoMessage() }}</span>
     </div>
 
     <!-- Auth Form -->
@@ -99,8 +127,8 @@
         />
       </div>
 
-      <!-- Password with Eye Hide/Show Toggle -->
-      <div class="form-group">
+      <!-- Password with Eye Hide/Show Toggle (Login & Register) -->
+      <div class="form-group" *ngIf="mode() !== 'forgot'">
         <label>Password *</label>
         <div class="password-input-wrapper">
           <input 
@@ -123,8 +151,21 @@
         </div>
       </div>
 
+      <!-- Confirm Password (Register Only) -->
+      <div class="form-group" *ngIf="mode() === 'register'">
+        <label>Confirm Password *</label>
+        <input 
+          [type]="showPassword() ? 'text' : 'password'" 
+          placeholder="••••••••" 
+          [ngModel]="confirmPassword()" 
+          (ngModelChange)="confirmPassword.set($event)" 
+          name="confirmPassword"
+          required 
+        />
+      </div>
+
       <!-- Optional Extra Fields for Tenant Registration -->
-      <div class="form-row-2" *ngIf="mode() === 'register' && role() === 'tenant'">
+      <div class="form-row-2" *ngIf="mode() === 'register' && role() === 'TENANT'">
         <div class="form-group">
           <label>Phone Number</label>
           <input 
@@ -136,7 +177,7 @@
           />
         </div>
         <div class="form-group">
-          <label>Occupation / Employer</label>
+          <label>Occupation</label>
           <input 
             type="text" 
             placeholder="e.g., Software Engineer" 
@@ -150,21 +191,24 @@
       <!-- Submit Button -->
       <button type="submit" class="btn btn-submit" [disabled]="isLoading()">
         <span *ngIf="!isLoading()">
-          {{ mode() === 'login' ? 'Sign In to RentEasy →' : 'Complete Registration →' }}
+          {{ mode() === 'login' ? 'Sign In to RentEasy →' : (mode() === 'register' ? 'Complete Registration →' : 'Send Reset Link →') }}
         </span>
         <span *ngIf="isLoading()">Processing...</span>
       </button>
     </form>
 
-    <!-- Auto-Fill Demo Credentials Helper -->
+    <!-- Auto-Fill Demo Credentials Helper (All 3 Roles) -->
     <div class="demo-login-box">
-      <span class="demo-label">⚡ AUTO-FILL CREDENTIALS (CLICK TO FILL)</span>
+      <span class="demo-label">⚡ 1-CLICK DEMO LOGIN (SELECT ROLE)</span>
       <div class="demo-buttons">
-        <button type="button" class="btn btn-demo-tenant" (click)="fillCredentials('tenant')">
-          🟢 Fill Tenant (Sophie)
+        <button type="button" class="btn btn-demo-tenant" (click)="fillCredentials('TENANT')">
+          🟢 Tenant (Sophie)
         </button>
-        <button type="button" class="btn btn-demo-owner" (click)="fillCredentials('owner')">
-          🟣 Fill Landlord (Alexander)
+        <button type="button" class="btn btn-demo-owner" (click)="fillCredentials('LANDLORD')">
+          🟣 Landlord (Alexander)
+        </button>
+        <button type="button" class="btn btn-demo-admin" (click)="fillCredentials('ADMIN')">
+          👑 Admin (Operator)
         </button>
       </div>
     </div>

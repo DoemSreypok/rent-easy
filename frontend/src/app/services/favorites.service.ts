@@ -65,6 +65,20 @@ export class FavoritesService {
     return this.savedPropertyIds().has(propertyId);
   }
 
+  addFavorite(propertyId: string): boolean {
+    const user = this.authService.currentUser();
+    if (!user) return false;
+
+    const current = new Set(this.savedPropertyIds());
+    if (!current.has(propertyId)) {
+      current.add(propertyId);
+      this.savedPropertyIds.set(current);
+      this.persistUserFavorites(current);
+      return true;
+    }
+    return false;
+  }
+
   toggleFavorite(propertyId: string): boolean {
     const user = this.authService.currentUser();
     if (!user) return false;

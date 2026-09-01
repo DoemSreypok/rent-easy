@@ -19,7 +19,7 @@ export class HomepagePreviewComponent implements OnInit {
   favoritesService = inject(FavoritesService);
 
   onNavigateToJourney = output<{ role: 'tenant' | 'owner'; step?: string; property?: PropertyListing }>();
-  onRequestAuth = output<{ defaultMode?: 'login' | 'register'; defaultRole?: 'tenant' | 'owner'; nextAction?: string }>();
+  onRequestAuth = output<{ defaultMode?: 'login' | 'register'; defaultRole?: 'tenant' | 'owner'; nextAction?: string; property?: PropertyListing }>();
 
   properties = signal<PropertyListing[]>([]);
   isLoading = signal<boolean>(true);
@@ -29,6 +29,8 @@ export class HomepagePreviewComponent implements OnInit {
   authAlert = signal<{
     message: string;
     defaultRole: 'tenant' | 'owner';
+    property?: PropertyListing;
+    action?: string;
   } | null>(null);
 
   // Search & Filter State
@@ -159,7 +161,8 @@ export class HomepagePreviewComponent implements OnInit {
     this.onRequestAuth.emit({
       defaultMode: 'login',
       defaultRole: alert?.defaultRole || 'tenant',
-      nextAction: 'favorite'
+      nextAction: alert?.action || 'favorite',
+      property: alert?.property
     });
   }
 
@@ -171,7 +174,9 @@ export class HomepagePreviewComponent implements OnInit {
     if (!this.authService.isLoggedIn()) {
       this.authAlert.set({
         message: `You are not signed in. Please sign in first to save "${prop.title}" to your favorites.`,
-        defaultRole: 'tenant'
+        defaultRole: 'tenant',
+        property: prop,
+        action: 'favorite'
       });
       return;
     }
@@ -209,11 +214,12 @@ export class HomepagePreviewComponent implements OnInit {
     if (!prop || !this.contactMessage().trim()) return;
 
     this.apiService.sendMessage({
-      sender: `${this.authService.currentUser()?.name || 'Tenant'} (Tenant)`,
+      sender: `${this.authService.currentUser()?.fullName || this.authService.currentUser()?.name || 'Tenant'} (Tenant)`,
       role: 'tenant',
       text: `Inquiry for ${prop.title}: ${this.contactMessage().trim()}`
     }).subscribe(() => {
-      this.showToast(`Message sent directly to ${prop.owner.name}! 💬`);
+      const ownerName = prop.owner?.name || 'Landlord';
+      this.showToast(`Message sent directly to ${ownerName}! 💬`);
       this.contactMessage.set('');
       this.showContactModal.set(false);
     });

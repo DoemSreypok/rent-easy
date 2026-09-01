@@ -237,6 +237,19 @@
   border-radius: 6px;
 }
 
+.saved-fav-badge {
+  background: rgba(239, 68, 68, 0.12);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
 .saved-loc {
   font-size: 13px;
   color: var(--text-muted);
@@ -255,6 +268,323 @@
   gap: 10px;
   margin-left: auto;
   flex-shrink: 0;
+}
+
+/* Browse Properties Grid in Tenant Portal */
+.portal-props-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+.portal-prop-card {
+  display: flex;
+  flex-direction: column;
+  border-radius: 16px;
+  overflow: hidden;
+  padding: 0;
+  cursor: pointer;
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s;
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 14px 30px rgba(0, 0, 0, 0.2);
+  }
+}
+
+.portal-prop-img-wrap {
+  position: relative;
+  width: 100%;
+  height: 180px;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+.portal-prop-tag {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(6px);
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 6px;
+  color: #2dd4bf;
+  border: 1px solid rgba(45, 212, 191, 0.3);
+}
+
+.portal-prop-body {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.portal-prop-price-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 6px;
+}
+
+.portal-prop-price {
+  font-size: 18px;
+  font-weight: 800;
+  color: #2dd4bf;
+
+  sub {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text-muted);
+  }
+}
+
+.portal-prop-rating {
+  font-size: 12px;
+  font-weight: 700;
+  color: #fbbf24;
+}
+
+.portal-prop-title {
+  font-size: 15px;
+  font-weight: 700;
+  margin: 0 0 4px 0;
+  color: var(--text-primary);
+  line-height: 1.3;
+}
+
+.portal-prop-loc {
+  font-size: 12.5px;
+  color: var(--text-muted);
+  margin: 0 0 10px 0;
+}
+
+.portal-prop-specs {
+  display: flex;
+  gap: 10px;
+  font-size: 11.5px;
+  color: var(--text-secondary);
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border-color);
+  margin-bottom: 12px;
+}
+
+.portal-prop-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: auto;
+
+  .btn {
+    flex: 1;
+    justify-content: center;
+  }
+}
+
+/* Favorite Heart Button & Quick Save Button in Tenant Portal */
+.favorite-heart-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: rgba(15, 23, 42, 0.85);
+  border: 1.5px solid rgba(255, 255, 255, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 15px;
+  transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+  z-index: 5;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+
+  &:hover {
+    transform: scale(1.15);
+    background: rgba(15, 23, 42, 0.95);
+    border-color: #ef4444;
+  }
+
+  &.favorited {
+    background: rgba(220, 38, 38, 0.9);
+    border-color: #ef4444;
+    box-shadow: 0 4px 14px rgba(239, 68, 68, 0.5);
+
+    &:hover {
+      background: rgba(239, 68, 68, 1);
+      transform: scale(1.2);
+    }
+  }
+
+  .heart-icon {
+    line-height: 1;
+  }
+}
+
+.btn-save-quick {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 600;
+  border-color: rgba(255, 255, 255, 0.18);
+  transition: all 0.2s ease;
+
+  &:hover {
+    border-color: #ef4444;
+    color: #ef4444;
+    background: rgba(239, 68, 68, 0.08);
+  }
+
+  &.favorited {
+    background: rgba(239, 68, 68, 0.15);
+    border-color: #ef4444;
+    color: #f87171;
+    font-weight: 700;
+
+    &:hover {
+      background: rgba(239, 68, 68, 0.25);
+      border-color: #dc2626;
+      color: #ffffff;
+    }
+  }
+}
+
+/* Modal in Tenant Portal */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(2, 6, 23, 0.85);
+  backdrop-filter: blur(12px);
+  z-index: 999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.portal-details-modal {
+  position: relative;
+  max-width: 680px;
+  width: 100%;
+  padding: 24px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: 20px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+}
+
+.modal-close-btn {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--text-primary);
+  font-size: 14px;
+  transition: all 0.2s;
+  z-index: 10;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.2);
+  }
+}
+
+.portal-modal-grid {
+  display: flex;
+  gap: 20px;
+
+  @media (max-width: 600px) {
+    flex-direction: column;
+  }
+}
+
+.portal-modal-img-wrap {
+  position: relative;
+  width: 240px;
+  height: 200px;
+  border-radius: 12px;
+  overflow: hidden;
+  flex-shrink: 0;
+
+  @media (max-width: 600px) {
+    width: 100%;
+    height: 180px;
+  }
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+.portal-modal-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  h3 {
+    font-size: 18px;
+    font-weight: 800;
+    margin: 0;
+    color: var(--text-primary);
+  }
+}
+
+.portal-modal-price {
+  font-size: 22px;
+  font-weight: 800;
+  color: #2dd4bf;
+
+  sub {
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+}
+
+.portal-modal-loc {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.portal-modal-specs {
+  display: flex;
+  gap: 12px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin: 4px 0;
+}
+
+.portal-modal-desc {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin: 4px 0 12px 0;
+}
+
+.portal-modal-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: auto;
+
+  .btn {
+    flex: 1;
+    justify-content: center;
+  }
 }
 
 /* Bookings & Apps */

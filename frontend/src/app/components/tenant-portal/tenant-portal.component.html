@@ -55,6 +55,13 @@
         </button>
         <button 
           class="tab-link" 
+          [class.active]="tenantNavTab() === 'browse'"
+          (click)="tenantNavTab.set('browse')"
+        >
+          🏢 Browse All Listings ({{ propertiesList().length }})
+        </button>
+        <button 
+          class="tab-link" 
           [class.active]="tenantNavTab() === 'bookings'"
           (click)="tenantNavTab.set('bookings')"
         >
@@ -92,25 +99,32 @@
         <div class="panel-header-row">
           <div>
             <h3>💖 Saved Homes / Favorites</h3>
-            <p class="panel-desc">Properties you marked with a heart while browsing.</p>
+            <p class="panel-desc">Properties you marked with a heart while browsing. Click remove or book viewing directly.</p>
           </div>
+          <button class="btn btn-sm btn-outline" (click)="tenantNavTab.set('browse')">
+            ➕ Browse More Properties
+          </button>
         </div>
 
         <div class="saved-grid" *ngIf="savedProperties().length > 0; else noSaved">
           <div *ngFor="let prop of savedProperties()" class="saved-card glass-card">
-            <img [src]="prop.image" [alt]="prop.title" class="saved-img" />
+            <img [src]="prop.image || (prop.images && prop.images[0]) || 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=800&q=80'" [alt]="prop.title" class="saved-img" />
             <div class="saved-info">
               <div class="saved-header-row">
                 <span class="saved-price">${{ prop.price }} <sub>/ mo</sub></span>
                 <span class="saved-type-tag">{{ prop.type }}</span>
+                <span class="saved-fav-badge">❤️ Saved in Favorites</span>
               </div>
               <h4>{{ prop.title }}</h4>
               <p class="saved-loc">📍 {{ prop.location }}</p>
               <div class="saved-specs">🛏️ {{ prop.bedrooms }} Beds • 🚿 {{ prop.bathrooms }} Baths • 📐 {{ prop.sqft }} sqft</div>
             </div>
             <div class="saved-actions">
-              <button class="btn btn-outline" (click)="removeFavorite(prop)">
+              <button class="btn btn-outline" (click)="removeFavorite(prop, $event)">
                 🗑️ Remove
+              </button>
+              <button class="btn btn-sm btn-outline" (click)="openPropertyDetails(prop)">
+                View Specs
               </button>
               <button class="btn btn-teal-solid" (click)="tenantNavTab.set('bookings')">
                 📅 Book Viewing →
@@ -123,9 +137,73 @@
           <div class="empty-state-box">
             <span class="empty-icon">🤍</span>
             <h4>No Saved Homes Yet</h4>
-            <p>Browse available properties and click the heart icon to save listings here.</p>
+            <p>Browse available properties and click the heart icon on any card to save listings here.</p>
+            <button class="btn btn-teal-solid" (click)="tenantNavTab.set('browse')">
+              🔍 Browse Properties to Favorite →
+            </button>
           </div>
         </ng-template>
+      </div>
+
+      <!-- 1A-2. Browse All Listings Tab (Direct Favorite Toggling) -->
+      <div class="content-panel" *ngIf="tenantNavTab() === 'browse'">
+        <div class="panel-header-row">
+          <div>
+            <h3>🏢 Available Rental Listings ({{ propertiesList().length }})</h3>
+            <p class="panel-desc">Click the heart button on any card to save or remove properties from your Saved Homes in real-time.</p>
+          </div>
+        </div>
+
+        <div class="portal-props-grid">
+          <div *ngFor="let prop of propertiesList()" class="portal-prop-card glass-card" (click)="openPropertyDetails(prop)">
+            <div class="portal-prop-img-wrap">
+              <img [src]="prop.image || (prop.images && prop.images[0]) || 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=800&q=80'" [alt]="prop.title" loading="lazy" />
+              <span class="portal-prop-tag">{{ prop.type }}</span>
+              
+              <!-- Live Favorite Heart Button -->
+              <button 
+                type="button"
+                class="favorite-heart-btn"
+                [class.favorited]="isFavorited(prop)"
+                (click)="toggleFavorite(prop, $event)"
+                [title]="isFavorited(prop) ? 'Saved in your Favorites ❤️ (Click to remove)' : 'Save to Favorites'"
+              >
+                <span class="heart-icon">{{ isFavorited(prop) ? '❤️' : '🤍' }}</span>
+              </button>
+            </div>
+
+            <div class="portal-prop-body">
+              <div class="portal-prop-price-row">
+                <span class="portal-prop-price">${{ prop.price }} <sub>/ month</sub></span>
+                <span class="portal-prop-rating">★ {{ prop.rating }}</span>
+              </div>
+
+              <h4 class="portal-prop-title">{{ prop.title }}</h4>
+              <p class="portal-prop-loc">📍 {{ prop.location }}</p>
+
+              <div class="portal-prop-specs">
+                <span>🛏️ {{ prop.bedrooms }} Beds</span>
+                <span>🚿 {{ prop.bathrooms }} Baths</span>
+                <span>📐 {{ prop.sqft }} sqft</span>
+              </div>
+
+              <div class="portal-prop-actions" (click)="$event.stopPropagation()">
+                <button 
+                  type="button" 
+                  class="btn btn-sm btn-outline btn-save-quick"
+                  [class.favorited]="isFavorited(prop)"
+                  (click)="toggleFavorite(prop, $event)"
+                  [title]="isFavorited(prop) ? 'Saved in Favorites' : 'Save to Favorites'"
+                >
+                  {{ isFavorited(prop) ? '❤️ Saved' : '🤍 Save' }}
+                </button>
+                <button class="btn btn-sm btn-teal-solid" (click)="tenantNavTab.set('bookings')">
+                  📅 Book Tour
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- 1B. Bookings Tab -->
@@ -313,7 +391,7 @@
               type="text" 
               placeholder="Type message to landlord..." 
               [ngModel]="newMessageText()" 
-              (ngModelChange)="newMessageText.set($event)"
+              (ngModelChange)="newMessageText.set($event)" 
               (keyup.enter)="sendMessage()"
             />
             <button class="btn btn-teal-solid" (click)="sendMessage()">Send Message →</button>
@@ -321,6 +399,51 @@
         </div>
       </div>
 
+    </div>
+  </div>
+
+  <!-- Property Quick View Modal in Portal -->
+  <div class="modal-backdrop" *ngIf="activeProperty()" (click)="closePropertyDetails()">
+    <div class="portal-details-modal glass-card" (click)="$event.stopPropagation()">
+      <button class="modal-close-btn" (click)="closePropertyDetails()">✕</button>
+
+      <div class="portal-modal-grid">
+        <div class="portal-modal-img-wrap">
+          <img [src]="activeProperty()?.image || (activeProperty()?.images && activeProperty()!.images![0]) || 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=800&q=80'" [alt]="activeProperty()?.title" />
+          <button 
+            type="button"
+            class="favorite-heart-btn"
+            [class.favorited]="isFavorited(activeProperty()!)"
+            (click)="toggleFavorite(activeProperty()!, $event)"
+          >
+            <span class="heart-icon">{{ isFavorited(activeProperty()!) ? '❤️' : '🤍' }}</span>
+          </button>
+        </div>
+        <div class="portal-modal-info">
+          <span class="portal-modal-price">${{ activeProperty()!.price }} <sub>/ month</sub></span>
+          <h3>{{ activeProperty()!.title }}</h3>
+          <p class="portal-modal-loc">📍 {{ activeProperty()!.location }}</p>
+          <div class="portal-modal-specs">
+            <span>🛏️ {{ activeProperty()!.bedrooms }} Beds</span>
+            <span>🚿 {{ activeProperty()!.bathrooms }} Baths</span>
+            <span>📐 {{ activeProperty()!.sqft }} sqft</span>
+          </div>
+          <p class="portal-modal-desc">{{ activeProperty()!.description }}</p>
+          <div class="portal-modal-actions">
+            <button 
+              type="button"
+              class="btn btn-outline btn-save-quick"
+              [class.favorited]="isFavorited(activeProperty()!)"
+              (click)="toggleFavorite(activeProperty()!)"
+            >
+              {{ isFavorited(activeProperty()!) ? '❤️ In Saved Homes' : '🤍 Save to Favorites' }}
+            </button>
+            <button class="btn btn-teal-solid" (click)="closePropertyDetails(); tenantNavTab.set('bookings')">
+              📅 Book Viewing Tour →
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </div>

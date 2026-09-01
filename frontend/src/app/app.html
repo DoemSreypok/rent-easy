@@ -8,7 +8,7 @@
       <div class="logo-icon-box">🏠</div>
       <div class="brand-text-group">
         <span class="brand-title">RentEasy</span>
-        <span class="brand-tagline">Verified Rentals</span>
+        <span class="brand-tagline">Multi-Role Rental Platform</span>
       </div>
     </div>
 
@@ -29,20 +29,32 @@
         Properties
       </button>
 
-      <!-- Guest Links -->
-      <ng-container *ngIf="!authService.isLoggedIn()">
-        <button class="site-nav-link" (click)="switchView('explore', 'how-it-works')">
-          How It Works
+      <!-- Admin Links (When logged in as Admin) -->
+      <ng-container *ngIf="authService.isAdmin()">
+        <button
+          class="site-nav-link nav-link-portal nav-link-admin"
+          [class.active]="activeView() === 'admin-portal'"
+          (click)="switchView('admin-portal')"
+        >
+          👑 Admin Command
         </button>
-        <button class="site-nav-link" (click)="switchView('explore', 'roles-section')">
-          Rent vs List
+      </ng-container>
+
+      <!-- Landlord Links (When logged in as Landlord) -->
+      <ng-container *ngIf="authService.isLandlord()">
+        <button
+          class="site-nav-link nav-link-portal nav-link-owner"
+          [class.active]="activeView() === 'owner-portal'"
+          (click)="switchView('owner-portal')"
+        >
+          🟣 Landlord Portal
         </button>
       </ng-container>
 
       <!-- Tenant Links (When logged in as Tenant) -->
       <ng-container *ngIf="authService.isTenant()">
         <button
-          class="site-nav-link nav-link-portal"
+          class="site-nav-link nav-link-portal nav-link-tenant"
           [class.active]="activeView() === 'tenant-portal'"
           (click)="switchView('tenant-portal')"
         >
@@ -57,21 +69,19 @@
         </button>
       </ng-container>
 
-      <!-- Owner Links (When logged in as Landlord) -->
-      <ng-container *ngIf="authService.isOwner()">
-        <button
-          class="site-nav-link nav-link-portal"
-          [class.active]="activeView() === 'owner-portal'"
-          (click)="switchView('owner-portal')"
-        >
-          🟣 Owner Dashboard
-        </button>
-      </ng-container>
+      <!-- Database Cluster Link -->
+      <button
+        class="site-nav-link"
+        [class.active]="activeView() === 'database'"
+        (click)="switchView('database')"
+      >
+        ⚡ Database
+      </button>
     </nav>
 
-    <!-- Right: Header Actions (List Property, Night/Day Mode, Auth) -->
+    <!-- Right: Header Actions (Favorites, Notifications, Theme, Auth) -->
     <div class="header-right-actions">
-      <!-- Favorite Saved Properties Button with Live Badge Counter (Only for Logged In User, Icon Only) -->
+      <!-- Favorite Saved Properties Button -->
       <button 
         *ngIf="authService.isLoggedIn()"
         class="btn-nav-favorites" 
@@ -87,166 +97,176 @@
         </span>
       </button>
 
-      <!-- Landlord Quick Action CTA (Only for Owner or Guest) -->
+      <!-- Live Notifications Bell -->
+      <div class="notifications-wrapper" *ngIf="authService.isLoggedIn()">
+        <button class="btn-nav-bell" (click)="toggleNotificationsDropdown()" title="Notifications">
+          <span class="bell-icon">🔔</span>
+          <span *ngIf="unreadNotificationsCount() > 0" class="bell-badge">{{ unreadNotificationsCount() }}</span>
+        </button>
+
+        <!-- Notifications Dropdown -->
+        <div *ngIf="showNotificationsDropdown()" class="notifications-dropdown glass-panel" (click)="$event.stopPropagation()">
+          <div class="notif-header">
+            <h4>Notifications ({{ unreadNotificationsCount() }} unread)</h4>
+            <button class="btn-text-action" (click)="markAllNotificationsRead()">Mark all read</button>
+          </div>
+          <div class="notif-list">
+            <div *ngFor="let notif of notificationsList()" class="notif-item" [class.unread]="!notif.isRead" (click)="markNotificationAsRead(notif)">
+              <div class="notif-dot" *ngIf="!notif.isRead"></div>
+              <div class="notif-body">
+                <strong>{{ notif.title }}</strong>
+                <p>{{ notif.message }}</p>
+                <small>{{ notif.createdAt | date:'shortTime' }}</small>
+              </div>
+            </div>
+            <div *ngIf="notificationsList().length === 0" class="notif-empty">
+              <span>No notifications yet.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Night / Day Theme Mode Toggle -->
       <button 
-        *ngIf="!authService.isTenant()" 
+        class="btn-theme-toggle" 
+        (click)="themeService.toggleTheme()" 
+        [title]="themeService.isDarkMode() ? 'Switch to Light Day Mode' : 'Switch to Dark Night Mode'"
+      >
+        <span class="theme-icon">{{ themeService.isDarkMode() ? '☀️' : '🌙' }}</span>
+      </button>
+
+            <!-- Landlord Quick Action CTA (Only for Landlord or Guest) -->
+      <button 
+        *ngIf="!authService.isTenant() && !authService.isAdmin()" 
         class="btn btn-list-property" 
         (click)="switchView('owner-portal')"
       >
         ➕ List Property
       </button>
 
-      <!-- Night / Day Theme Mode Toggle -->
-      <button 
-        class="btn-theme-toggle" 
-        (click)="themeService.toggleTheme()" 
-        [title]="themeService.isDark() ? 'Switch to Day Mode (Light Theme)' : 'Switch to Night Mode (Dark Theme)'"
-      >
-        <span class="theme-icon">{{ themeService.isDark() ? '🌙' : '☀️' }}</span>
-        <span class="theme-label">{{ themeService.isDark() ? 'Night' : 'Day' }}</span>
-      </button>
-
-      <!-- Unauthenticated Buttons -->
-      <ng-container *ngIf="!authService.isLoggedIn()">
-        <button class="btn btn-ghost" (click)="openLogin()">
-          Sign In
-        </button>
-        <button class="btn btn-teal-solid" (click)="openRegister('tenant')">
-          Sign Up
-        </button>
-      </ng-container>
-
-      <!-- Authenticated User Menu Dropdown Trigger -->
-      <div class="user-menu-wrapper" *ngIf="authService.isLoggedIn()">
-        <button class="user-menu-btn" (click)="toggleUserDropdown()">
+      <!-- Authentication Section -->
+      <div class="auth-wrapper">
+        <!-- If Logged In: Show User Profile Avatar & Dropdown -->
+        <div *ngIf="authService.isLoggedIn()" class="logged-in-user" (click)="toggleUserDropdown()">
           <img 
-            *ngIf="authService.currentUser()?.avatar" 
-            [src]="authService.currentUser()!.avatar" 
+            [src]="authService.currentUser()?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80'" 
             class="user-avatar" 
-            alt="Avatar" 
+            alt="User Avatar"
           />
           <div class="user-info-text">
-            <span class="user-name">{{ authService.currentUser()?.name }}</span>
-            <span class="user-role-pill" [ngClass]="authService.isOwner() ? 'pill-owner' : 'pill-tenant'">
-              {{ authService.isOwner() ? 'Landlord' : 'Tenant' }}
+            <span class="user-name">{{ authService.currentUser()?.fullName || authService.currentUser()?.name }}</span>
+            <span class="user-role-badge" [ngClass]="authService.userRole().toLowerCase()">
+              {{ authService.userRole() }}
             </span>
           </div>
           <span class="dropdown-chevron">▾</span>
-        </button>
 
-        <!-- User Floating Dropdown Menu (Strictly for the Authenticated User) -->
-        <div class="user-dropdown-menu glass-card" *ngIf="showUserDropdown()" (click)="$event.stopPropagation()">
-          <div class="dropdown-user-header">
-            <img [src]="authService.currentUser()?.avatar" class="dropdown-avatar" alt="Avatar" />
-            <div>
-              <strong class="dropdown-user-name">{{ authService.currentUser()?.name }}</strong>
-              <div class="dropdown-user-email">{{ authService.currentUser()?.email }}</div>
-              <span class="badge-role-tag" [ngClass]="authService.isOwner() ? 'pill-owner' : 'pill-tenant'">
-                {{ authService.isOwner() ? '🟣 Property Owner Account' : '🟢 Verified Tenant Account' }}
-              </span>
+          <!-- User Dropdown Menu -->
+          <div *ngIf="showUserDropdown()" class="user-dropdown-menu glass-panel" (click)="$event.stopPropagation()">
+            <div class="dropdown-header">
+              <strong>{{ authService.currentUser()?.fullName || authService.currentUser()?.name }}</strong>
+              <small>{{ authService.currentUser()?.email }}</small>
             </div>
-          </div>
+            <div class="dropdown-divider"></div>
+            
+            <button *ngIf="authService.isAdmin()" class="dropdown-item" (click)="switchView('admin-portal')">
+              👑 Admin Command Center
+            </button>
+            <button *ngIf="authService.isLandlord()" class="dropdown-item" (click)="switchView('owner-portal')">
+              🟣 Landlord Dashboard
+            </button>
+            <button *ngIf="authService.isTenant()" class="dropdown-item" (click)="switchView('tenant-portal')">
+              🟢 Tenant Portal
+            </button>
+            <button *ngIf="authService.isTenant()" class="dropdown-item" (click)="switchView('active-tenancy')">
+              🏠 My Active Tenancy
+            </button>
 
-          <div class="dropdown-divider"></div>
+            <button class="dropdown-item" (click)="switchView('database')">
+              ⚡ Database Cluster
+            </button>
 
-          <!-- Role-Appropriate Navigation Links inside User Menu -->
-          <div class="dropdown-links-list">
-            <!-- Tenant Links -->
-            <ng-container *ngIf="authService.isTenant()">
-              <button class="dropdown-link-item" (click)="switchView('tenant-portal')">
-                <span class="link-icon">🟢</span>
-                <div>
-                  <strong>Tenant Portal</strong>
-                  <small>Saved Homes, Bookings & Applications</small>
-                </div>
-              </button>
-
-              <button class="dropdown-link-item" (click)="switchView('active-tenancy')">
-                <span class="link-icon">🏠</span>
-                <div>
-                  <strong>My Rental & Lease</strong>
-                  <small>Digital Lease, Rent Escrow & Repairs</small>
-                </div>
-              </button>
-            </ng-container>
-
-            <!-- Owner Links -->
-            <ng-container *ngIf="authService.isOwner()">
-              <button class="dropdown-link-item" (click)="switchView('owner-portal')">
-                <span class="link-icon">🟣</span>
-                <div>
-                  <strong>Owner Dashboard</strong>
-                  <small>Add Property, Screen Applicants, Leases</small>
-                </div>
-              </button>
-            </ng-container>
-
-            <button class="dropdown-link-item" (click)="switchView('database'); refreshAll()">
-              <span class="link-icon">⚡</span>
-              <div>
-                <strong>Database Status</strong>
-                <small>MongoDB live records & collections</small>
-              </div>
+            <div class="dropdown-divider"></div>
+            <button class="dropdown-item dropdown-logout" (click)="logout()">
+              🚪 Sign Out
             </button>
           </div>
+        </div>
 
-          <div class="dropdown-divider"></div>
-
-          <button class="dropdown-logout-btn" (click)="logout()">
-            🚪 Sign Out
-          </button>
+        <!-- If Logged Out: Show Sign In & Register Buttons -->
+        <div *ngIf="!authService.isLoggedIn()" class="auth-buttons-group">
+          <button class="btn btn-ghost" (click)="openLogin()">Sign In</button>
+          <button class="btn btn-register-cta" (click)="openRegister()">Register</button>
         </div>
       </div>
 
     </div>
   </header>
 
-  <!-- Dynamic Main Content Area -->
-  <main class="main-viewport">
+  <!-- Main Website Content Container -->
+  <main class="main-content-area">
     
-    <!-- 1. Explore & Public Homepage View -->
-    <div class="view-panel scrollable" *ngIf="activeView() === 'explore'">
-      <app-homepage-preview 
-        (onNavigateToJourney)="handleHomepageJourneyTransition($event)"
-        (onRequestAuth)="handleRequestAuth($event)"
-      ></app-homepage-preview>
-    </div>
+    <!-- 1. Explore / Homepage View -->
+    <app-homepage-preview
+      *ngIf="activeView() === 'explore'"
+      (onRequestAuth)="handleRequestAuth($event)"
+      (onNavigateJourney)="handleHomepageJourneyTransition($event)"
+    ></app-homepage-preview>
 
-    <!-- 2. Tenant Portal View -->
-    <div class="view-panel scrollable" *ngIf="activeView() === 'tenant-portal'">
-      <app-journey-simulator [portalMode]="'tenant'" (onRequestAuth)="handleRequestAuth($event)"></app-journey-simulator>
-    </div>
+    <!-- 2. Admin Command Center -->
+    <app-admin-portal
+      *ngIf="activeView() === 'admin-portal'"
+    ></app-admin-portal>
 
-    <!-- 3. Landlord / Property Owner Portal View -->
-    <div class="view-panel scrollable" *ngIf="activeView() === 'owner-portal'">
-      <app-journey-simulator [portalMode]="'owner'" (onRequestAuth)="handleRequestAuth($event)"></app-journey-simulator>
-    </div>
+    <!-- 3. Landlord Dashboard & Property Manager -->
+    <app-owner-portal
+      *ngIf="activeView() === 'owner-portal'"
+      (onRequestAuth)="handleRequestAuth($event)"
+    ></app-owner-portal>
 
-    <!-- 4. Two-Way Active Tenancy Hub View -->
-    <div class="view-panel scrollable" *ngIf="activeView() === 'active-tenancy'">
-      <app-journey-simulator [portalMode]="'active-tenancy'" (onRequestAuth)="handleRequestAuth($event)"></app-journey-simulator>
-    </div>
+    <!-- 4. Tenant Portal & Rental Desk -->
+    <app-tenant-portal
+      *ngIf="activeView() === 'tenant-portal'"
+      (onRequestAuth)="handleRequestAuth($event)"
+    ></app-tenant-portal>
 
-    <!-- 5. Backend Status & Database Test View -->
-    <div class="view-panel scrollable" *ngIf="activeView() === 'database'">
-      <div class="backend-test-container">
-        <div class="backend-header glass-card">
-          <h2>⚡ RentEasy MongoDB Control Center</h2>
-          <p>Express API server running on <strong>http://localhost:5001</strong> connected to MongoDB Database.</p>
-          
-          <div class="backend-badges">
-            <span class="badge" [class.badge-success]="isConnected()" [class.badge-danger]="!isConnected()">
-              Express API: {{ isConnected() ? 'ONLINE (Port 5001)' : 'DISCONNECTED' }}
+    <!-- 5. Active Tenancy Hub -->
+    <app-active-tenancy
+      *ngIf="activeView() === 'active-tenancy'"
+      (onRequestAuth)="handleRequestAuth($event)"
+    ></app-active-tenancy>
+
+    <!-- 6. Database Cluster & Health Diagnostics -->
+    <div *ngIf="activeView() === 'database'" class="database-view-container">
+      <div class="db-header-banner">
+        <h2>⚡ RentEasy Full-Stack System Diagnostics</h2>
+        <p>Real-time MongoDB Atlas & local Node.js Express architecture status</p>
+      </div>
+
+      <div class="db-cards-grid">
+        <!-- Status Card -->
+        <div class="card status-card" [class.card-connected]="isDbConnected()">
+          <div class="status-header">
+            <h3>MongoDB Connection</h3>
+            <span class="status-badge" [class.connected]="isDbConnected()">
+              {{ isDbConnected() ? 'Connected (Port 27017)' : 'Offline / Standalone' }}
             </span>
-            <span class="badge" [class.badge-success]="isDbConnected()" [class.badge-warning]="isConnected() && !isDbConnected()">
-              MongoDB: {{ isDbConnected() ? 'CONNECTED' : 'DISCONNECTED / WAITING' }}
-            </span>
-            <button class="btn btn-teal-seed" (click)="onSeedDatabase()" [disabled]="isLoading()">
-              🌱 Seed MongoDB with RentEasy Data
+          </div>
+          <p class="status-desc">
+            {{ isDbConnected() 
+              ? 'Mongoose ODM connected successfully to mongodb://localhost:27017/rent-easy-db. All 10 models (User, Property, PropertyImage, Room, RoomImage, RentalRequest, RentalContract, Payment, MaintenanceRequest, Notification) active.'
+              : 'Backend server is active. MongoDB database will automatically persist all records when local daemon or cloud Atlas connection is started.' }}
+          </p>
+
+          <div class="db-actions-row">
+            <button class="btn btn-primary" (click)="onSeedDatabase()" [disabled]="isLoading()">
+              🌱 Seed Database (Admin, Landlord, Tenant, 7 Properties, Rooms, Contracts, Payments)
+            </button>
+            <button class="btn btn-secondary" (click)="refreshAll()">
+              🔄 Re-check Status
             </button>
           </div>
-
-          <div *ngIf="seedStatus()" class="seed-alert-banner">
+          <div *ngIf="seedStatus()" class="seed-toast">
             {{ seedStatus() }}
           </div>
         </div>
@@ -263,14 +283,14 @@
 
           <div class="users-list-table" *ngIf="registeredUsers().length > 0; else noUsers">
             <div *ngFor="let u of registeredUsers()" class="user-record-row">
-              <img [src]="u.avatar || 'https://api.dicebear.com/7.x/avataaars/svg?seed=' + u.name" class="table-avatar" alt="Avatar" />
+              <img [src]="u.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=80&q=80'" class="table-avatar" alt="Avatar" />
               <div class="user-main-col">
-                <strong>{{ u.name }}</strong>
+                <strong>{{ u.fullName || u.name }}</strong>
                 <span class="user-email-txt">📧 {{ u.email }}</span>
               </div>
               <div class="user-role-col">
-                <span class="role-badge" [ngClass]="u.role === 'owner' ? 'badge-owner' : 'badge-tenant'">
-                  {{ u.role === 'owner' ? '🟣 Property Owner' : '🟢 Tenant' }}
+                <span class="role-badge" [ngClass]="u.role?.toLowerCase()">
+                  {{ u.role }}
                 </span>
               </div>
               <div class="user-meta-col">
@@ -286,60 +306,21 @@
             </div>
           </div>
           <ng-template #noUsers>
-            <p class="empty-state">No registered users found. Click "Sign Up" or "Seed MongoDB" to create accounts.</p>
+            <p class="empty-state">No registered users found. Click "Sign Up" or "Seed Database" above.</p>
           </ng-template>
-        </div>
-
-        <div class="backend-grid">
-          <!-- Add Item Form -->
-          <div class="card form-card">
-            <h3>➕ Add Item to Test MongoDB</h3>
-            <form (ngSubmit)="onAddItem()" class="item-form">
-              <div class="form-group">
-                <label>Title</label>
-                <input type="text" [(ngModel)]="newItem.title" name="title" placeholder="e.g., Luxury Condo" required />
-              </div>
-              <div class="form-group">
-                <label>Category</label>
-                <select [(ngModel)]="newItem.category" name="category">
-                  <option value="Apartment">Apartment</option>
-                  <option value="Condo">Condo</option>
-                  <option value="Villa">Villa</option>
-                  <option value="Studio">Studio</option>
-                </select>
-              </div>
-              <div class="form-group">
-                <label>Price ($/mo)</label>
-                <input type="number" [(ngModel)]="newItem.price" name="price" required />
-              </div>
-              <button type="submit" class="btn btn-teal-solid full-width">Save to MongoDB</button>
-            </form>
-          </div>
-
-          <!-- Items Feed -->
-          <div class="card items-card">
-            <div class="items-header">
-              <h3>📦 Generic Test Items ({{ items().length }})</h3>
-              <button class="btn btn-sm btn-outline" (click)="loadDbItems()">🔄 Refresh</button>
-            </div>
-            <div class="items-list" *ngIf="items().length > 0; else noItems">
-              <div *ngFor="let item of items()" class="item-row">
-                <div>
-                  <strong>{{ item.title }}</strong>
-                  <div class="item-meta">{{ item.category }} • ${{ item.price }}/mo</div>
-                </div>
-                <button class="btn-delete" (click)="onDeleteItem(item._id)">🗑️</button>
-              </div>
-            </div>
-            <ng-template #noItems>
-              <p class="empty-state">No items in MongoDB collection yet. Click "Seed MongoDB" above.</p>
-            </ng-template>
-          </div>
         </div>
       </div>
     </div>
 
   </main>
+
+  <!-- Global Floating Action Toast -->
+  <div *ngIf="appToast()" class="global-action-toast">
+    <div class="toast-card">
+      <span class="toast-text">{{ appToast() }}</span>
+      <button class="toast-close" (click)="appToast.set(null)">✕</button>
+    </div>
+  </div>
 
   <!-- Auth Modal Dialog -->
   <app-auth-modal

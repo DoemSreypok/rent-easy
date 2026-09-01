@@ -152,25 +152,30 @@ export class OwnerPortalComponent implements OnInit {
     this.isPublishing.set(true);
     const amenitiesArr = this.newPropAmenities().split(',').map(s => s.trim()).filter(Boolean);
 
+    const locationText = this.newPropLocation().trim();
     const payload = {
       title: this.newPropTitle().trim(),
-      type: this.newPropType(),
-      location: this.newPropLocation().trim(),
+      name: this.newPropTitle().trim(),
+      type: this.newPropType().toUpperCase(),
+      location: locationText,
+      address: locationText,
+      city: 'Phnom Penh',
       price: price!,
       deposit: this.newPropDeposit() || price!,
       bedrooms: this.newPropBeds() || 1,
       bathrooms: this.newPropBaths() || 1,
       sqft: this.newPropSqft() || 800,
       image: this.newPropImage(),
+      images: [this.newPropImage()],
       amenities: amenitiesArr.length > 0 ? amenitiesArr : ['WiFi', 'Air Conditioning', 'Parking'],
       description: this.newPropDescription().trim() || 'Modern residential property available for rent.',
       owner: {
-        name: this.authService.currentUser()?.name || 'Alexander Sterling',
+        name: this.authService.currentUser()?.fullName || this.authService.currentUser()?.name || 'Alexander Sterling',
         trustScore: '100% SuperHost',
         responseRate: '10 mins',
         totalProperties: 5
       },
-      status: 'Available',
+      status: 'APPROVED',
       featured: true
     };
 

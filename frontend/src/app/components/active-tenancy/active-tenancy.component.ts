@@ -70,8 +70,9 @@ export class ActiveTenancyComponent implements OnInit {
       technician: 'Assigned: Heng Dara (Senior HVAC Tech)',
       status: 'In Progress'
     }).subscribe({
-      next: (res) => {
-        this.maintenanceTickets.update(list => [res.data, ...list]);
+      next: (res: any) => {
+        const ticket = res.data?.request || res.data;
+        this.maintenanceTickets.update(list => [ticket, ...list]);
         this.newMaintIssue.set('');
       }
     });

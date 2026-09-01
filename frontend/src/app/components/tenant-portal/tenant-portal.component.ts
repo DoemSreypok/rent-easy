@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, output, inject } from '@angular/core';
+import { Component, OnInit, signal, computed, output, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ApiService } from '../../services/api.service';
@@ -26,16 +26,22 @@ export class TenantPortalComponent implements OnInit {
 
   onRequestAuth = output<{ defaultMode?: 'login' | 'register'; defaultRole?: 'tenant' | 'owner' }>();
 
-  // Tenant Tab Navigation (Saved Homes | Bookings | Applications | My Rental | Messages)
-  tenantNavTab = signal<'saved' | 'bookings' | 'applications' | 'my-rental' | 'messages'>('saved');
+  // Tenant Tab Navigation (Saved Homes | Browse Listings | Bookings | Applications | My Rental | Messages)
+  tenantNavTab = signal<'saved' | 'browse' | 'bookings' | 'applications' | 'my-rental' | 'messages'>('saved');
 
   // Data Signals
   propertiesList = signal<PropertyListing[]>([]);
-  savedProperties = signal<PropertyListing[]>([]);
+  savedProperties = computed(() => {
+    const ids = this.favoritesService.savedPropertyIds();
+    return this.propertiesList().filter(p => ids.has(p._id || p.id || p.title));
+  });
   applications = signal<RentalApplication[]>([]);
   bookings = signal<ViewingBooking[]>([]);
   maintenanceTickets = signal<MaintenanceTicket[]>([]);
   messages = signal<ChatMessage[]>([]);
+
+  // Selected Property for Details Modal in Portal
+  activeProperty = signal<PropertyListing | null>(null);
 
   // Maintenance & Rental
   newMaintIssue = signal<string>('');
@@ -50,7 +56,6 @@ export class TenantPortalComponent implements OnInit {
   loadAllData(): void {
     this.apiService.getProperties().subscribe(res => {
       this.propertiesList.set(res.data);
-      this.refreshSavedHomes(res.data);
       if (res.data.length > 0) {
         this.activeRentalProperty.set(res.data[0]);
       }
@@ -62,16 +67,29 @@ export class TenantPortalComponent implements OnInit {
     this.apiService.getMessages().subscribe(res => this.messages.set(res.data));
   }
 
-  refreshSavedHomes(allProps: PropertyListing[]): void {
-    const ids = this.favoritesService.savedPropertyIds();
-    const matched = allProps.filter(p => ids.has(p._id || p.id || p.title));
-    this.savedProperties.set(matched);
+  isFavorited(prop: PropertyListing): boolean {
+    const propId = prop._id || prop.id || prop.title;
+    return this.favoritesService.isFavorited(propId);
   }
 
-  removeFavorite(prop: PropertyListing): void {
+  toggleFavorite(prop: PropertyListing, e?: MouseEvent): void {
+    if (e) e.stopPropagation();
+    const propId = prop._id || prop.id || prop.title;
+    this.favoritesService.toggleFavorite(propId);
+  }
+
+  removeFavorite(prop: PropertyListing, e?: MouseEvent): void {
+    if (e) e.stopPropagation();
     const propId = prop._id || prop.id || prop.title;
     this.favoritesService.removeFavorite(propId);
-    this.savedProperties.update(list => list.filter(p => (p._id || p.id || p.title) !== propId));
+  }
+
+  openPropertyDetails(prop: PropertyListing): void {
+    this.activeProperty.set(prop);
+  }
+
+  closePropertyDetails(): void {
+    this.activeProperty.set(null);
   }
 
   openLoginModal(role: 'tenant' | 'owner'): void {
@@ -89,8 +107,9 @@ export class TenantPortalComponent implements OnInit {
       technician: 'Assigned: Heng Dara (Senior HVAC Tech)',
       status: 'In Progress'
     }).subscribe({
-      next: (res) => {
-        this.maintenanceTickets.update(list => [res.data, ...list]);
+      next: (res: any) => {
+        const ticket = res.data?.request || res.data;
+        this.maintenanceTickets.update(list => [ticket, ...list]);
         this.newMaintIssue.set('');
       }
     });
