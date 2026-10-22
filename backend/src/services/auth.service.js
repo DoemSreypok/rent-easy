@@ -1,6 +1,7 @@
 import jwt from 'jsonwebtoken';
 import { User } from '../models/user.model.js';
 import { JWT_SECRET } from '../middleware/auth.middleware.js';
+import { ensureConnected } from '../config/db.js';
 
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '1d';
 
@@ -18,6 +19,11 @@ export class AuthService {
   }
 
   static async register({ fullName, email, phone, password, role = 'TENANT', employment, annualIncome }) {
+    const isConnected = await ensureConnected();
+    if (!isConnected) {
+      throw new Error('Database is currently connecting or unavailable. Please ensure MongoDB is running.');
+    }
+
     const existingUser = await User.findOne({ email: email.toLowerCase().trim() });
     if (existingUser) {
       throw new Error('An account with this email address already exists.');
@@ -43,6 +49,11 @@ export class AuthService {
   }
 
   static async login(email, password) {
+    const isConnected = await ensureConnected();
+    if (!isConnected) {
+      throw new Error('Database is currently connecting or unavailable. Please ensure MongoDB is running.');
+    }
+
     const user = await User.findOne({ email: email.toLowerCase().trim() });
     if (!user) {
       throw new Error('Invalid email or password.');
@@ -62,6 +73,11 @@ export class AuthService {
   }
 
   static async forgotPassword(email) {
+    const isConnected = await ensureConnected();
+    if (!isConnected) {
+      throw new Error('Database is currently unavailable.');
+    }
+
     const user = await User.findOne({ email: email.toLowerCase().trim() });
     if (!user) {
       // Do not reveal user existence
@@ -75,11 +91,16 @@ export class AuthService {
 
     return {
       message: 'Password reset token generated successfully.',
-      resetToken // In production, email this; here returned for mock dev flow
+      resetToken
     };
   }
 
   static async resetPassword(resetToken, newPassword) {
+    const isConnected = await ensureConnected();
+    if (!isConnected) {
+      throw new Error('Database is currently unavailable.');
+    }
+
     const user = await User.findOne({
       resetPasswordToken: resetToken,
       resetPasswordExpires: { $gt: Date.now() }
@@ -99,6 +120,11 @@ export class AuthService {
   }
 
   static async changePassword(userId, currentPassword, newPassword) {
+    const isConnected = await ensureConnected();
+    if (!isConnected) {
+      throw new Error('Database is currently unavailable.');
+    }
+
     const user = await User.findById(userId);
     if (!user) {
       throw new Error('User not found.');
@@ -115,6 +141,11 @@ export class AuthService {
   }
 
   static async getCurrentUser(userId) {
+    const isConnected = await ensureConnected();
+    if (!isConnected) {
+      throw new Error('Database is currently unavailable.');
+    }
+
     const user = await User.findById(userId);
     if (!user) {
       throw new Error('User not found.');

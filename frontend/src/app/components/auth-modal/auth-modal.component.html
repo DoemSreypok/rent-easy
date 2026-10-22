@@ -2,29 +2,38 @@
   <div class="auth-card glass-panel" (click)="$event.stopPropagation()">
     
     <!-- Modal Close Button -->
-    <button class="close-btn" (click)="onClose.emit()">✕</button>
+    <button class="close-btn" (click)="onClose.emit()" aria-label="Close dialog">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="18" y1="6" x2="6" y2="18"></line>
+        <line x1="6" y1="6" x2="18" y2="18"></line>
+      </svg>
+    </button>
 
-    <!-- Header Brand -->
+    <!-- Header Brand & Welcome -->
     <div class="auth-header">
       <div class="brand-badge">
-        <span class="logo-emoji">🏠</span>
+        <svg class="badge-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+          <polyline points="9 22 9 12 15 12 15 22"></polyline>
+        </svg>
         <span class="brand-title">RentEasy</span>
       </div>
       <h2>
-        {{ mode() === 'login' ? 'Welcome Back' : (mode() === 'register' ? 'Create Your Account' : 'Reset Password') }}
+        {{ mode() === 'login' ? 'Welcome Back' : (mode() === 'register' ? 'Create Your Account' : (forgotStep() === 1 ? 'Reset Password' : 'Set New Password')) }}
       </h2>
       <p class="subtitle">
         {{ mode() === 'login' 
-          ? 'Sign in to access your rentals, tenant dashboard, or landlord portal' 
+          ? 'Sign in to access your properties, bookings, or management portal' 
           : (mode() === 'register' 
-            ? 'Join verified tenants, landlords, and property administrators' 
-            : 'Enter your registered email to receive reset instructions') }}
+            ? 'Join verified tenants, landlords, and property managers today' 
+            : (forgotStep() === 1 ? 'Enter your registered email to receive your password reset token' : 'Enter your new secure password below')) }}
       </p>
     </div>
 
     <!-- Mode Switcher Tabs -->
     <div class="mode-tabs">
       <button 
+        type="button"
         class="tab-btn" 
         [class.active]="mode() === 'login'" 
         (click)="setMode('login')"
@@ -32,34 +41,51 @@
         Sign In
       </button>
       <button 
+        type="button"
         class="tab-btn" 
         [class.active]="mode() === 'register'" 
         (click)="setMode('register')"
       >
-        Register
+        Create Account
       </button>
       <button 
+        type="button"
         class="tab-btn" 
         [class.active]="mode() === 'forgot'" 
         (click)="setMode('forgot')"
       >
-        Forgot Password
+        Reset Password
       </button>
     </div>
 
     <!-- Role Selection (Only on Register) -->
     <div class="role-selector" *ngIf="mode() === 'register'">
-      <label class="section-label">Select Your Role:</label>
+      <div class="section-label-group">
+        <label class="section-label">I WANT TO REGISTER AS:</label>
+        <span class="role-active-badge" [ngClass]="role().toLowerCase()">{{ role() }}</span>
+      </div>
       <div class="role-options">
         <div 
           class="role-card role-tenant" 
           [class.selected]="role() === 'TENANT'"
           (click)="role.set('TENANT')"
+          role="button"
+          tabindex="0"
         >
-          <span class="role-icon">🟢</span>
-          <div>
-            <strong>Tenant</strong>
-            <small>Search, request & pay rent</small>
+          <div class="role-icon-box">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+              <circle cx="12" cy="7" r="4"></circle>
+            </svg>
+          </div>
+          <div class="role-info">
+            <span class="role-name">Tenant</span>
+            <small>Browse, tour & rent properties</small>
+          </div>
+          <div class="role-check" *ngIf="role() === 'TENANT'">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
           </div>
         </div>
 
@@ -67,11 +93,28 @@
           class="role-card role-owner" 
           [class.selected]="role() === 'LANDLORD'"
           (click)="role.set('LANDLORD')"
+          role="button"
+          tabindex="0"
         >
-          <span class="role-icon">🟣</span>
-          <div>
-            <strong>Landlord</strong>
-            <small>Listings, rooms & contracts</small>
+          <div class="role-icon-box">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"></path>
+              <path d="M6 12H4a2 2 0 0 0-2 2v8h4"></path>
+              <path d="M18 9h2a2 2 0 0 1 2 2v11h-4"></path>
+              <path d="M10 6h4"></path>
+              <path d="M10 10h4"></path>
+              <path d="M10 14h4"></path>
+              <path d="M10 18h4"></path>
+            </svg>
+          </div>
+          <div class="role-info">
+            <span class="role-name">Landlord</span>
+            <small>List rentals & manage contracts</small>
+          </div>
+          <div class="role-check" *ngIf="role() === 'LANDLORD'">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
           </div>
         </div>
 
@@ -79,139 +122,443 @@
           class="role-card role-admin" 
           [class.selected]="role() === 'ADMIN'"
           (click)="role.set('ADMIN')"
+          role="button"
+          tabindex="0"
         >
-          <span class="role-icon">👑</span>
-          <div>
-            <strong>Admin</strong>
-            <small>Platform command & approvals</small>
+          <div class="role-icon-box">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path>
+            </svg>
+          </div>
+          <div class="role-info">
+            <span class="role-name">Admin</span>
+            <small>Platform control & oversight</small>
+          </div>
+          <div class="role-check" *ngIf="role() === 'ADMIN'">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
           </div>
         </div>
       </div>
     </div>
 
     <!-- Error Banner -->
-    <div *ngIf="errorMessage()" class="error-banner">
-      ⚠️ <span>{{ errorMessage() }}</span>
+    <div *ngIf="errorMessage()" class="alert-banner error-banner">
+      <div class="alert-content">
+        <svg class="alert-svg-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="12"></line>
+          <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+        <span class="alert-text">{{ errorMessage() }}</span>
+      </div>
+      <button type="button" class="alert-close-btn" (click)="errorMessage.set(null)" aria-label="Dismiss">✕</button>
     </div>
 
     <!-- Success Info Banner -->
-    <div *ngIf="successInfoMessage()" class="success-banner">
-      ✓ <span>{{ successInfoMessage() }}</span>
+    <div *ngIf="successInfoMessage()" class="alert-banner success-banner">
+      <div class="alert-content">
+        <svg class="alert-svg-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+          <polyline points="22 4 12 14.01 9 11.01"></polyline>
+        </svg>
+        <span class="alert-text">{{ successInfoMessage() }}</span>
+      </div>
+      <button type="button" class="alert-close-btn" (click)="successInfoMessage.set(null)" aria-label="Dismiss">✕</button>
     </div>
 
     <!-- Auth Form -->
-    <form (ngSubmit)="onSubmit()" class="auth-form">
-      <!-- Name (Register Only) -->
-      <div class="form-group" *ngIf="mode() === 'register'">
-        <label>Full Name *</label>
-        <input 
-          type="text" 
-          placeholder="e.g., Sophie Taylor" 
-          [ngModel]="name()" 
-          (ngModelChange)="name.set($event)" 
-          name="name"
-          required 
-        />
-      </div>
-
-      <!-- Email -->
-      <div class="form-group">
-        <label>Email Address *</label>
-        <input 
-          type="email" 
-          placeholder="e.g., name@example.com" 
-          [ngModel]="email()" 
-          (ngModelChange)="email.set($event)" 
-          name="email"
-          required 
-        />
-      </div>
-
-      <!-- Password with Eye Hide/Show Toggle (Login & Register) -->
-      <div class="form-group" *ngIf="mode() !== 'forgot'">
-        <label>Password *</label>
-        <div class="password-input-wrapper">
-          <input 
-            [type]="showPassword() ? 'text' : 'password'" 
-            placeholder="••••••••" 
-            [ngModel]="password()" 
-            (ngModelChange)="password.set($event)" 
-            name="password"
-            required 
-          />
-          <button 
-            type="button" 
-            class="btn-toggle-password" 
-            (click)="toggleShowPassword()" 
-            [title]="showPassword() ? 'Hide password' : 'Show password'"
-            tabindex="-1"
-          >
-            <span class="eye-icon">{{ showPassword() ? '🙈' : '👁️' }}</span>
-          </button>
+    <form (ngSubmit)="onSubmit()" class="auth-form" autocomplete="on">
+      
+      <!-- ================= FORGOT PASSWORD MODE ================= -->
+      <ng-container *ngIf="mode() === 'forgot'">
+        <!-- Step 1: Email for Reset Token -->
+        <div *ngIf="forgotStep() === 1" class="form-group">
+          <label for="forgot-email">Account Email Address *</label>
+          <div class="input-wrapper">
+            <span class="input-prefix-icon">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect width="20" height="16" x="2" y="4" rx="2"></rect>
+                <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path>
+              </svg>
+            </span>
+            <input 
+              id="forgot-email"
+              type="email" 
+              placeholder="e.g. sophie@example.com" 
+              [ngModel]="email()" 
+              (ngModelChange)="email.set($event)" 
+              name="forgotEmail"
+              required 
+            />
+          </div>
+          <span class="field-hint">We'll verify your email and provide a reset token immediately.</span>
         </div>
-      </div>
 
-      <!-- Confirm Password (Register Only) -->
-      <div class="form-group" *ngIf="mode() === 'register'">
-        <label>Confirm Password *</label>
-        <input 
-          [type]="showPassword() ? 'text' : 'password'" 
-          placeholder="••••••••" 
-          [ngModel]="confirmPassword()" 
-          (ngModelChange)="confirmPassword.set($event)" 
-          name="confirmPassword"
-          required 
-        />
-      </div>
+        <!-- Step 2: Token and New Password -->
+        <ng-container *ngIf="forgotStep() === 2">
+          <div class="form-group">
+            <label for="reset-token">Reset Token *</label>
+            <div class="input-wrapper">
+              <span class="input-prefix-icon">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="m21 2-2 2m-1.5 1.5L13 10m-3-3l2 2m-2-2-4 4a5 5 0 1 0 7.07 7.07l4.93-4.93"></path>
+                </svg>
+              </span>
+              <input 
+                id="reset-token"
+                type="text" 
+                placeholder="Enter reset token" 
+                [ngModel]="resetToken()" 
+                (ngModelChange)="resetToken.set($event)" 
+                name="resetToken"
+                required 
+              />
+            </div>
+          </div>
 
-      <!-- Optional Extra Fields for Tenant Registration -->
-      <div class="form-row-2" *ngIf="mode() === 'register' && role() === 'TENANT'">
+          <div class="form-group">
+            <label for="new-password">New Password *</label>
+            <div class="input-wrapper">
+              <span class="input-prefix-icon">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect width="18" height="11" x="3" y="11" rx="2" ry="2"></rect>
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                </svg>
+              </span>
+              <input 
+                id="new-password"
+                [type]="showPassword() ? 'text' : 'password'" 
+                placeholder="At least 6 characters" 
+                [ngModel]="newPassword()" 
+                (ngModelChange)="newPassword.set($event)" 
+                name="newPassword"
+                required 
+              />
+              <button 
+                type="button" 
+                class="btn-toggle-password" 
+                (click)="toggleShowPassword()" 
+                [attr.aria-label]="showPassword() ? 'Hide password' : 'Show password'"
+                tabindex="-1"
+              >
+                <!-- SVG Eye Icon -->
+                <svg *ngIf="!showPassword()" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
+                  <circle cx="12" cy="12" r="3"></circle>
+                </svg>
+                <!-- SVG Eye-Off Icon -->
+                <svg *ngIf="showPassword()" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"></path>
+                  <path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"></path>
+                  <path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"></path>
+                  <line x1="2" x2="22" y1="2" y2="22"></line>
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="confirm-new-password">Confirm New Password *</label>
+            <div class="input-wrapper">
+              <span class="input-prefix-icon">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect width="18" height="11" x="3" y="11" rx="2" ry="2"></rect>
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                </svg>
+              </span>
+              <input 
+                id="confirm-new-password"
+                [type]="showPassword() ? 'text' : 'password'" 
+                placeholder="Re-enter new password" 
+                [ngModel]="confirmNewPassword()" 
+                (ngModelChange)="confirmNewPassword.set($event)" 
+                name="confirmNewPassword"
+                required 
+              />
+            </div>
+          </div>
+        </ng-container>
+      </ng-container>
+
+      <!-- ================= LOGIN & REGISTER FORMS ================= -->
+      <ng-container *ngIf="mode() !== 'forgot'">
+        
+        <!-- Full Name (Register Only) -->
+        <div class="form-group" *ngIf="mode() === 'register'">
+          <label for="reg-name">Full Name *</label>
+          <div class="input-wrapper">
+            <span class="input-prefix-icon">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                <circle cx="12" cy="7" r="4"></circle>
+              </svg>
+            </span>
+            <input 
+              id="reg-name"
+              type="text" 
+              placeholder="e.g. Sophie Taylor" 
+              [ngModel]="name()" 
+              (ngModelChange)="name.set($event)" 
+              name="name"
+              required 
+            />
+          </div>
+        </div>
+
+        <!-- Email Address -->
         <div class="form-group">
-          <label>Phone Number</label>
-          <input 
-            type="tel" 
-            placeholder="+1 (555) 000-0000" 
-            [ngModel]="phone()" 
-            (ngModelChange)="phone.set($event)" 
-            name="phone"
-          />
+          <div class="label-row">
+            <label for="auth-email">Email Address *</label>
+            <span *ngIf="email().trim() && isEmailValid()" class="valid-indicator">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12"></polyline>
+              </svg>
+              Valid email
+            </span>
+          </div>
+          <div class="input-wrapper">
+            <span class="input-prefix-icon">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect width="20" height="16" x="2" y="4" rx="2"></rect>
+                <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path>
+              </svg>
+            </span>
+            <input 
+              id="auth-email"
+              type="email" 
+              placeholder="e.g. name@example.com" 
+              [ngModel]="email()" 
+              (ngModelChange)="email.set($event)" 
+              name="email"
+              required 
+            />
+          </div>
         </div>
-        <div class="form-group">
-          <label>Occupation</label>
-          <input 
-            type="text" 
-            placeholder="e.g., Software Engineer" 
-            [ngModel]="employment()" 
-            (ngModelChange)="employment.set($event)" 
-            name="employment"
-          />
-        </div>
-      </div>
 
-      <!-- Submit Button -->
-      <button type="submit" class="btn btn-submit" [disabled]="isLoading()">
-        <span *ngIf="!isLoading()">
-          {{ mode() === 'login' ? 'Sign In to RentEasy →' : (mode() === 'register' ? 'Complete Registration →' : 'Send Reset Link →') }}
+        <!-- Password Field -->
+        <div class="form-group">
+          <div class="label-row">
+            <label for="auth-password">Password *</label>
+            <button 
+              *ngIf="mode() === 'login'"
+              type="button" 
+              class="link-forgot" 
+              (click)="setMode('forgot')"
+            >
+              Forgot password?
+            </button>
+          </div>
+          <div class="input-wrapper">
+            <span class="input-prefix-icon">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect width="18" height="11" x="3" y="11" rx="2" ry="2"></rect>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+              </svg>
+            </span>
+            <input 
+              id="auth-password"
+              [type]="showPassword() ? 'text' : 'password'" 
+              placeholder="••••••••" 
+              [ngModel]="password()" 
+              (ngModelChange)="password.set($event)" 
+              name="password"
+              required 
+            />
+            <button 
+              type="button" 
+              class="btn-toggle-password" 
+              (click)="toggleShowPassword()" 
+              [attr.aria-label]="showPassword() ? 'Hide password' : 'Show password'"
+              tabindex="-1"
+            >
+              <!-- SVG Eye Icon -->
+              <svg *ngIf="!showPassword()" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
+                <circle cx="12" cy="12" r="3"></circle>
+              </svg>
+              <!-- SVG Eye-Off Icon -->
+              <svg *ngIf="showPassword()" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"></path>
+                <path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"></path>
+                <path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"></path>
+                <line x1="2" x2="22" y1="2" y2="22"></line>
+              </svg>
+            </button>
+          </div>
+
+          <!-- Password Strength Meter (Only on Register) -->
+          <div class="password-meter-container" *ngIf="mode() === 'register' && password()">
+            <div class="meter-bar-track">
+              <div 
+                class="meter-bar-fill" 
+                [style.width]="getPasswordStrength().width"
+                [style.background-color]="getPasswordStrength().color"
+              ></div>
+            </div>
+            <div class="meter-labels">
+              <span class="meter-hint">Strength:</span>
+              <span class="meter-val" [style.color]="getPasswordStrength().color">
+                {{ getPasswordStrength().label }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Confirm Password (Register Only) -->
+        <div class="form-group" *ngIf="mode() === 'register'">
+          <div class="label-row">
+            <label for="auth-confirm-password">Confirm Password *</label>
+            <span 
+              *ngIf="confirmPassword() && doPasswordsMatch()" 
+              class="valid-indicator"
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12"></polyline>
+              </svg>
+              Passwords match
+            </span>
+            <span 
+              *ngIf="confirmPassword() && !doPasswordsMatch()" 
+              class="invalid-indicator"
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+              Passwords do not match
+            </span>
+          </div>
+          <div class="input-wrapper">
+            <span class="input-prefix-icon">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect width="18" height="11" x="3" y="11" rx="2" ry="2"></rect>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+              </svg>
+            </span>
+            <input 
+              id="auth-confirm-password"
+              [type]="showConfirmPassword() ? 'text' : 'password'" 
+              placeholder="••••••••" 
+              [ngModel]="confirmPassword()" 
+              (ngModelChange)="confirmPassword.set($event)" 
+              name="confirmPassword"
+              required 
+            />
+            <button 
+              type="button" 
+              class="btn-toggle-password" 
+              (click)="toggleShowConfirmPassword()" 
+              [attr.aria-label]="showConfirmPassword() ? 'Hide password' : 'Show password'"
+              tabindex="-1"
+            >
+              <svg *ngIf="!showConfirmPassword()" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
+                <circle cx="12" cy="12" r="3"></circle>
+              </svg>
+              <svg *ngIf="showConfirmPassword()" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"></path>
+                <path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"></path>
+                <path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"></path>
+                <line x1="2" x2="22" y1="2" y2="22"></line>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Optional Extra Details (Register Tenant) -->
+        <div class="form-row-2" *ngIf="mode() === 'register' && role() === 'TENANT'">
+          <div class="form-group">
+            <label for="tenant-phone">Phone Number</label>
+            <div class="input-wrapper">
+              <span class="input-prefix-icon">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect width="14" height="20" x="5" y="2" rx="2" ry="2"></rect>
+                  <path d="M12 18h.01"></path>
+                </svg>
+              </span>
+              <input 
+                id="tenant-phone"
+                type="tel" 
+                placeholder="+1 (555) 234-5678" 
+                [ngModel]="phone()" 
+                (ngModelChange)="phone.set($event)" 
+                name="phone"
+              />
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="tenant-emp">Occupation</label>
+            <div class="input-wrapper">
+              <span class="input-prefix-icon">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect width="20" height="14" x="2" y="7" rx="2" ry="2"></rect>
+                  <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+                </svg>
+              </span>
+              <input 
+                id="tenant-emp"
+                type="text" 
+                placeholder="e.g. Software Engineer" 
+                [ngModel]="employment()" 
+                (ngModelChange)="employment.set($event)" 
+                name="employment"
+              />
+            </div>
+          </div>
+        </div>
+
+        <!-- Remember Me Checkbox (Login Only) -->
+        <div class="remember-row" *ngIf="mode() === 'login'">
+          <label class="checkbox-container">
+            <input 
+              type="checkbox" 
+              [ngModel]="rememberMe()" 
+              (ngModelChange)="rememberMe.set($event)" 
+              name="rememberMe"
+            />
+            <span class="custom-checkbox"></span>
+            <span class="checkbox-label">Keep me signed in on this browser</span>
+          </label>
+        </div>
+
+      </ng-container>
+
+      <!-- Submit CTA Button -->
+      <button 
+        type="submit" 
+        class="btn-auth-submit" 
+        [disabled]="isLoading()"
+        [class.loading]="isLoading()"
+      >
+        <span *ngIf="isLoading()" class="spinner-icon"></span>
+        <span class="btn-text">
+          <ng-container *ngIf="!isLoading()">
+            {{ mode() === 'login' ? 'Sign In to Account' : (mode() === 'register' ? 'Complete Registration' : (forgotStep() === 1 ? 'Get Reset Token' : 'Update Password & Sign In')) }}
+          </ng-container>
+          <ng-container *ngIf="isLoading()">
+            Please wait...
+          </ng-container>
         </span>
-        <span *ngIf="isLoading()">Processing...</span>
+        <svg *ngIf="!isLoading()" class="btn-arrow-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="5" y1="12" x2="19" y2="12"></line>
+          <polyline points="12 5 19 12 12 19"></polyline>
+        </svg>
       </button>
-    </form>
 
-    <!-- Auto-Fill Demo Credentials Helper (All 3 Roles) -->
-    <div class="demo-login-box">
-      <span class="demo-label">⚡ 1-CLICK DEMO LOGIN (SELECT ROLE)</span>
-      <div class="demo-buttons">
-        <button type="button" class="btn btn-demo-tenant" (click)="fillCredentials('TENANT')">
-          🟢 Tenant (Sophie)
-        </button>
-        <button type="button" class="btn btn-demo-owner" (click)="fillCredentials('LANDLORD')">
-          🟣 Landlord (Alexander)
-        </button>
-        <button type="button" class="btn btn-demo-admin" (click)="fillCredentials('ADMIN')">
-          👑 Admin (Operator)
+      <!-- Back to Sign in link when in Forgot mode -->
+      <div *ngIf="mode() === 'forgot'" class="back-link-box">
+        <button type="button" class="link-back" (click)="setMode('login')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="19" y1="12" x2="5" y2="12"></line>
+            <polyline points="12 19 5 12 12 5"></polyline>
+          </svg>
+          Back to Sign In
         </button>
       </div>
-    </div>
+
+    </form>
 
   </div>
 </div>

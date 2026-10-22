@@ -69,14 +69,6 @@
         </button>
       </ng-container>
 
-      <!-- Database Cluster Link -->
-      <button
-        class="site-nav-link"
-        [class.active]="activeView() === 'database'"
-        (click)="switchView('database')"
-      >
-        ⚡ Database
-      </button>
     </nav>
 
     <!-- Right: Header Actions (Favorites, Notifications, Theme, Auth) -->
@@ -182,9 +174,6 @@
               🏠 My Active Tenancy
             </button>
 
-            <button class="dropdown-item" (click)="switchView('database')">
-              ⚡ Database Cluster
-            </button>
 
             <div class="dropdown-divider"></div>
             <button class="dropdown-item dropdown-logout" (click)="logout()">
@@ -325,6 +314,8 @@
   <!-- Auth Modal Dialog -->
   <app-auth-modal
     *ngIf="showAuthModal()"
+    [initialMode]="authModalDefaultMode()"
+    [initialRole]="authModalDefaultRole()"
     (onClose)="showAuthModal.set(false)"
     (onSuccess)="handleAuthSuccess()"
   ></app-auth-modal>
